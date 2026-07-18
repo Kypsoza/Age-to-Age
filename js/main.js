@@ -6,7 +6,7 @@ function startLoop(){
   loopTimer = setInterval(()=>{
     if(state.speed === 0) return;
     for(let i=0;i<state.speed;i++) simTick(state);
-    renderAll();
+    updateTickVisuals();
   }, TICK_MS);
 }
 

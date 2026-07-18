@@ -82,11 +82,13 @@ function renderBuildingOnTile(div, key){
       const ctrl = document.createElement("div");
       ctrl.className = "workerControls";
       const minus = document.createElement("button");
+      minus.className = "wcMinus";
       minus.textContent = "−";
       minus.onclick = (e)=>{ e.stopPropagation(); adjustWorkers(key,-1); };
       const count = document.createElement("span");
       count.textContent = `${b.workers||0}/${lvl.maxWorkers}`;
       const plus = document.createElement("button");
+      plus.className = "wcPlus";
       plus.textContent = "+";
       plus.onclick = (e)=>{ e.stopPropagation(); adjustWorkers(key,1); };
       ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
@@ -103,6 +105,30 @@ function onTileClick(x,y){
     selectedInfoTarget = bKey ? {kind:'building', key:bKey} : {kind:'tile', x, y};
   }
   renderInfoPanel();
+}
+
+// Mise à jour "légère" appelée à chaque tick de simulation : ne touche qu'aux
+// barres de progression, au voile nuit et au topbar — ne recrée AUCUN élément
+// DOM. Ça évite de détruire les boutons +/- travailleurs sous la souris à
+// chaque tick (c'était la cause du scintillement / clics ratés signalés).
+function updateTickVisuals(){
+  const night = isNight(state);
+  for(const key of Object.keys(BUILDINGS)){
+    const def = BUILDINGS[key];
+    if(!def.produces) continue;
+    const b = state.buildings[key];
+    if(b.level===0) continue;
+    const slot = def.slot;
+    const div = document.querySelector(`.tile[data-x="${slot.x}"][data-y="${slot.y}"]`);
+    if(!div) continue;
+    div.style.setProperty('--night-op', night ? 0.38 : 0);
+    const lvl = def.levels[b.level-1];
+    const fill = div.querySelector(".barFill");
+    if(fill) fill.style.width = Math.min(100, ((b.inv[def.produces]||0)/lvl.localCap)*100)+"%";
+    const count = div.querySelector(".workerControls span");
+    if(count) count.textContent = `${b.workers||0}/${lvl.maxWorkers}`;
+  }
+  renderTopbar();
 }
 
 // ---------------------------------------------------------------------

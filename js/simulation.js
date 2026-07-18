@@ -13,7 +13,7 @@ function getFreePopulation(s){
 }
 
 function assignToSite(s, site, delta){
-  if(site.discovered) return;
+  if(site.discovered || site.locked) return;
   if(delta > 0){
     if(getFreePopulation(s) <= 0){
       toast("Aucun habitant disponible pour cette recherche.");
@@ -33,8 +33,9 @@ function simTick(s){
     if((s.day-1) % DAYS_PER_SEASON === 0) s.seasonIdx = (s.seasonIdx+1) % SEASONS.length;
   }
 
+  s.justDiscovered = [];
   for(const site of s.researchSites){
-    if(site.discovered || site.assigned <= 0) continue;
+    if(site.discovered || site.locked || site.assigned <= 0) continue;
     site.effortRemaining -= site.assigned;
     if(site.effortRemaining <= 0){
       site.effortRemaining = 0;
@@ -43,6 +44,14 @@ function simTick(s){
       site.assigned = 0;
       const def = RESEARCH_TYPES[site.type];
       toast(`${def.label} découverte ! ${freed} habitant(s) libéré(s).`);
+      s.justDiscovered.push(site.type);
+
+      if(site.type === "nourriture"){
+        for(const other of s.researchSites){
+          if(other.type !== "nourriture") other.locked = false;
+        }
+        toast("De nouveaux sites apparaissent à l'horizon...");
+      }
     }
   }
 }

@@ -48,6 +48,7 @@ function freshState(){
       effortRemaining: RESEARCH_TYPES[type].effort,
       assigned: 0,
       discovered: false,
+      locked: type !== "nourriture", // seule la recherche de nourriture est visible au départ
     });
   }
   const storagePos = pickSpot();

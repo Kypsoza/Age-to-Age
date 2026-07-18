@@ -85,6 +85,7 @@ function renderMarkers(){
   layer.appendChild(storageEl);
 
   for(const site of state.researchSites){
+    if(site.locked) continue;
     const el = createSiteMarker(site);
     el.style.left = site.x + "px";
     el.style.top = site.y + "px";
@@ -151,6 +152,18 @@ function createSiteMarker(site){
 function updateTickVisuals(){
   const night = isNight(state);
   document.getElementById("nightVeil").style.setProperty('--night-op', night ? 0.35 : 0);
+
+  if(state.justDiscovered && state.justDiscovered.length > 0){
+    // Un site vient d'être découvert (icône à changer, contrôles à retirer,
+    // éventuellement de nouveaux sites déverrouillés à faire apparaître) :
+    // un rebuild complet des marqueurs est nécessaire, mais ça ne se
+    // produit qu'à ce moment précis, jamais à chaque tick — pas de risque
+    // de scintillement.
+    renderMarkers();
+    state.justDiscovered = [];
+    return;
+  }
+
   for(const site of state.researchSites){
     if(site.discovered) continue;
     const el = document.querySelector(`.marker[data-type="${site.type}"]`);

@@ -117,6 +117,8 @@ function createMenuBuildingMarker(key){
     arrow.textContent = "▲";
     arrow.title = "Améliorer";
     arrow.onclick = (e)=>{ e.stopPropagation(); buildMenuBuilding(state, key); renderAll(); };
+    arrow.onmouseenter = (e)=>{ e.stopPropagation(); showMenuTooltip(arrow, key); };
+    arrow.onmouseleave = (e)=>{ e.stopPropagation(); hideMenuTooltip(); };
     div.appendChild(arrow);
   }
 

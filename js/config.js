@@ -54,7 +54,7 @@ const MENU_BUILDINGS = {
   townhall: { name:"Hôtel de Ville", icon:"🏛️", cost:{bois:25,or:10}, requires:[], maxLevel:null,
     desc:"Le cœur de la tribu. Débloque tous les autres bâtiments. Chaque niveau augmente de "+GATHER_CAP_PER_HDV_LEVEL+" le plafond d'habitants assignables par zone/bâtiment." },
   house: { name:"Maison", icon:"🏠", cost:{bois:15}, requires:["townhall"], maxLevel:null,
-    desc:"+5 habitants par niveau, niveaux illimités (effet complet en Phase 5)." },
+    desc:"+5 habitants par niveau, immédiatement disponibles. Niveaux illimités." },
   forge: { name:"Forge", icon:"⚒️", cost:{bois:20,or:10}, requires:["townhall"], maxLevel:1,
     desc:"Débloque les améliorations d'outils (effet complet en Phase 7)." },
   huntlodge: { name:"Pavillon de Chasse", icon:"🏹", cost:{bois:15}, requires:["forge"], maxLevel:1,

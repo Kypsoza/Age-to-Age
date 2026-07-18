@@ -185,5 +185,11 @@ function buildMenuBuilding(s, key){
   const cost = costForLevel(def, b.level);
   for(const [res,amt] of Object.entries(cost)) s.resources[res] -= amt;
   b.level++;
-  toast(b.level===1 ? `${def.name} construit(e).` : `${def.name} amélioré(e) au niveau ${b.level}.`);
+
+  if(key === "house"){
+    s.population += 5;
+    toast(`${def.name} ${b.level===1?'construite':'améliorée'} : +5 habitants (population totale : ${s.population}).`);
+  } else {
+    toast(b.level===1 ? `${def.name} construit(e).` : `${def.name} amélioré(e) au niveau ${b.level}.`);
+  }
 }

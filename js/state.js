@@ -18,7 +18,7 @@ function freshState(){
 
   const s = {
     tick:0, day:1, seasonIdx:0, speed:1,
-    resources: { bois:0, pierre:0, nourriture:0, or:0 },
+    resources: { bois:0, pierre:0, nourriture:START_FOOD, or:0 },
     population: START_POPULATION,   // habitants actifs (assignables)
     populationReserve: 0,           // habitants en réserve (Maison), à recruter contre nourriture
     recruitedCount: 0,              // nb déjà recrutés au-delà des survivants initiaux (pour le coût croissant)

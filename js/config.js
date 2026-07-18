@@ -18,6 +18,7 @@ const SEASONS = [
 ];
 
 const START_POPULATION = 5;
+const START_FOOD = 50; // réserves de la tribu à l'arrivée, le temps de trouver/organiser la nourriture
 
 // Les 4 zones à découvrir en tout début de partie. "effort" = nombre de
 // points d'effort nécessaires (1 habitant assigné consomme 1 point/tick).

@@ -86,3 +86,32 @@ function showMenuTooltip(anchorEl, key){
 function hideMenuTooltip(){
   if(tooltipEl){ tooltipEl.remove(); tooltipEl = null; }
 }
+
+// Tooltip dédié à la flèche ▲ sur la carte : contrairement au tooltip du
+// menu du bas (qui redirige une fois construit), celle-ci doit toujours
+// montrer le coût et le temps du PROCHAIN niveau, puisque c'est justement
+// le seul endroit où on peut encore l'améliorer.
+function showUpgradeTooltip(anchorEl, key){
+  hideMenuTooltip();
+  const def = MENU_BUILDINGS[key];
+  const b = state.menuBuildings[key];
+  const status = getMenuBuildStatus(state, key);
+  tooltipEl = document.createElement("div");
+  tooltipEl.className = "menuTooltip";
+  let html = `<div class="ttTitle">${def.icon} ${def.name}</div>
+    <div class="ttSub">Niveau actuel : ${b.level}${def.maxLevel?"/"+def.maxLevel:""}</div>
+    <div class="ttDesc">${def.desc}</div>`;
+  if(status.maxed){
+    html += `<div style="color:var(--green-bright);font-size:11px;">Niveau maximum atteint.</div>`;
+  } else {
+    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin:6px 0 4px;">Niveau ${b.level+1} — ${buildTimeForLevel(b.level)}s de construction :</div>`;
+    for(const l of status.lines){
+      html += `<div class="reqLine ${l.ok?'ok':'bad'}">${l.label}</div>`;
+    }
+  }
+  tooltipEl.innerHTML = html;
+  document.body.appendChild(tooltipEl);
+  const rect = anchorEl.getBoundingClientRect();
+  tooltipEl.style.left = Math.max(8, rect.left + rect.width/2 - tooltipEl.offsetWidth/2) + "px";
+  tooltipEl.style.top = (rect.top - tooltipEl.offsetHeight - 10) + "px";
+}

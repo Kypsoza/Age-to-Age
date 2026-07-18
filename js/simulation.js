@@ -81,7 +81,6 @@ function simTick(s){
   }
 
   s.justDiscovered = [];
-  let foodIncomeActive = false;
 
   for(const site of s.researchSites){
     if(site.locked) continue;
@@ -112,7 +111,6 @@ function simTick(s){
     if(site.type !== "hotelville" && site.assigned > 0){
       const mult = 1 + (s.upgrades[site.type]||0);
       s.resources[site.type] = (s.resources[site.type]||0) + site.assigned * GATHER_RATE * mult;
-      if(site.type === "nourriture") foodIncomeActive = true;
     }
   }
 
@@ -122,15 +120,13 @@ function simTick(s){
     if(b.level > 0 && b.assigned > 0){
       const mult = 1 + (s.upgrades[cfg.resource]||0);
       s.resources[cfg.resource] = (s.resources[cfg.resource]||0) + b.assigned * GATHER_RATE * cfg.rateMult * mult;
-      if(cfg.resource === "nourriture") foodIncomeActive = true;
     }
   }
 
-  // Consommation de nourriture : seulement si au moins une source de
-  // nourriture est active ce tick précis ("income actif").
-  if(foodIncomeActive){
-    s.resources.nourriture = Math.max(0, s.resources.nourriture - s.population*FOOD_CONSUMPTION);
-  }
+  // Consommation de nourriture : TOUS les habitants actifs consomment en
+  // permanence, qu'ils travaillent ou non — pas seulement quand une source
+  // de nourriture est en cours de récolte ce tick précis.
+  s.resources.nourriture = Math.max(0, s.resources.nourriture - s.population*FOOD_CONSUMPTION);
 
   // Progression des constructions/améliorations en cours.
   s.justCompleted = [];
@@ -168,7 +164,7 @@ function getResourceIncome(s, resKey){
     if(b.level>0 && b.assigned>0) prod += b.assigned*GATHER_RATE*cfg.rateMult*(1+(s.upgrades[resKey]||0));
   }
   let cons = 0;
-  if(resKey==="nourriture" && prod>0){
+  if(resKey==="nourriture"){
     cons = s.population*FOOD_CONSUMPTION;
   }
   return { prod, cons, net: prod-cons };

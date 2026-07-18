@@ -22,14 +22,16 @@ function renderTopbar(){
   setDelta("deltaBois", getResourceIncome(state,"bois").net);
   setDelta("deltaNourriture", getResourceIncome(state,"nourriture").net);
   setDelta("deltaOr", getResourceIncome(state,"or").net);
+  setDelta("deltaPierre", getResourceIncome(state,"pierre").net);
 
   const boisFound = !!siteByType(state,"bois")?.discovered;
   const foodFound = !!siteByType(state,"nourriture")?.discovered;
   const orFound = !!siteByType(state,"or")?.discovered;
+  const pierreFound = !!siteByType(state,"pierre")?.discovered;
   document.getElementById("pillBois").classList.toggle("hidden", !boisFound);
   document.getElementById("pillNourriture").classList.toggle("hidden", !foodFound);
   document.getElementById("pillOr").classList.toggle("hidden", !orFound);
-  document.getElementById("pillPierre").classList.add("hidden"); // pas encore de source de pierre (Phase 4)
+  document.getElementById("pillPierre").classList.toggle("hidden", !pierreFound);
 
   const free = getFreePopulation(state);
   const busy = state.population - free;
@@ -64,6 +66,7 @@ function setupResourceTooltips(){
     {id:"pillBois", resKey:"bois", label:"Bois"},
     {id:"pillNourriture", resKey:"nourriture", label:"Nourriture"},
     {id:"pillOr", resKey:"or", label:"Or"},
+    {id:"pillPierre", resKey:"pierre", label:"Pierre"},
   ];
   for(const c of configs){
     const el = document.getElementById(c.id);
@@ -75,23 +78,32 @@ function setupResourceTooltips(){
 
 function showResourceTooltip(anchorEl, resKey, label){
   hideMenuTooltip();
-  const producers = state.researchSites.filter(s2 => s2.type===resKey && s2.discovered && s2.assigned>0);
+  const mult = 1 + (state.upgrades[resKey]||0);
+  const siteProducers = state.researchSites.filter(s2 => s2.type===resKey && s2.discovered && s2.assigned>0);
+  const altProducers = Object.entries(ALT_GATHER)
+    .filter(([key,cfg]) => cfg.resource===resKey && state.menuBuildings[key].level>0 && state.menuBuildings[key].assigned>0)
+    .map(([key,cfg]) => ({ key, cfg, assigned: state.menuBuildings[key].assigned }));
+
   tooltipEl = document.createElement("div");
   tooltipEl.className = "menuTooltip";
   let html = `<div class="ttTitle">${iconFor(resKey)} ${label}</div>`;
-  if(producers.length===0){
+  if(siteProducers.length===0 && altProducers.length===0){
     html += `<div class="ttSub">Aucune production active actuellement.</div>`;
   } else {
     html += `<div class="ttSub">Production active :</div>`;
-    for(const p of producers){
-      const rate = p.assigned*GATHER_RATE;
+    for(const p of siteProducers){
+      const rate = p.assigned*GATHER_RATE*mult;
       html += `<div class="reqLine ok"><span>${RESEARCH_TYPES[p.type].label} (${p.assigned} hab.)</span><span>+${rate.toFixed(1)}/s</span></div>`;
+    }
+    for(const a of altProducers){
+      const rate = a.assigned*GATHER_RATE*a.cfg.rateMult*mult;
+      html += `<div class="reqLine ok"><span>${MENU_BUILDINGS[a.key].name} (${a.assigned} hab.)</span><span>+${rate.toFixed(1)}/s</span></div>`;
     }
   }
   if(resKey==="nourriture"){
     const inc = getResourceIncome(state,"nourriture");
     if(inc.cons>0){
-      html += `<div class="reqLine bad"><span>Population (${state.population} hab.)</span><span>-${inc.cons.toFixed(1)}/s</span></div>`;
+      html += `<div class="reqLine bad"><span>Population (${state.population} hab., consomme toujours)</span><span>-${inc.cons.toFixed(1)}/s</span></div>`;
     }
   }
   tooltipEl.innerHTML = html;

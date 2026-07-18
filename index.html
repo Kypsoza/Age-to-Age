@@ -36,10 +36,16 @@
     </div>
 
     <div id="infoPanel">
+      <div id="villagePanel" class="hidden"></div>
       <h2>Détails</h2>
       <div id="infoContent">Clique sur un site de recherche ou sur l'entrepôt pour voir ses détails.</div>
     </div>
   </main>
+
+  <div id="buildBar" class="hidden">
+    <span class="eraLabel">Bâtiments — Ère 1</span>
+    <div id="menuList"></div>
+  </div>
 
   <footer>
     <button id="btnSave">💾 Sauvegarder</button>
@@ -57,6 +63,7 @@
 <script src="js/simulation.js"></script>
 <script src="js/render-map.js"></script>
 <script src="js/render-panel.js"></script>
+<script src="js/render-buildbar.js"></script>
 <script src="js/render-topbar.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/storage.js"></script>

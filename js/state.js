@@ -24,8 +24,11 @@ function freshState(){
     decor: generateDecor(rand),
     researchSites: [],
     storage: null,
-    selected: null, // {kind:'site', type} | {kind:'storage'}
+    villageFounded: false,
+    menuBuildings: {},
+    selected: null, // {kind:'site', type} | {kind:'storage'} | {kind:'menuBuilding', key}
   };
+  for(const key of Object.keys(MENU_BUILDINGS)) s.menuBuildings[key] = { level:0 };
 
   const taken = [];
   function pickSpot(){
@@ -48,6 +51,7 @@ function freshState(){
       effortRemaining: RESEARCH_TYPES[type].effort,
       assigned: 0,
       discovered: false,
+      launched: false, // tant que non lancée, seul un bouton "Lancer la recherche" est visible
       locked: type !== "nourriture", // seule la recherche de nourriture est visible au départ
     });
   }

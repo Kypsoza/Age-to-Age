@@ -27,5 +27,7 @@ function renderAll(){
   renderTopbar();
   renderMarkers();
   renderInfoPanel();
+  renderVillagePanel();
+  renderBuildBar();
   document.getElementById("nightVeil").style.setProperty('--night-op', isNight(state) ? 0.35 : 0);
 }

@@ -104,8 +104,19 @@ function createStorageMarker(){
 function createSiteMarker(site){
   const def = RESEARCH_TYPES[site.type];
   const div = document.createElement("div");
-  div.className = "marker " + (site.discovered ? "discoveredSite" : "pendingSite");
+  const stateClass = site.discovered ? "discoveredSite" : (site.launched ? "pendingSite" : "unlaunchedSite");
+  div.className = "marker " + stateClass;
   div.dataset.type = site.type;
+
+  if(!site.discovered && !site.launched){
+    const btn = document.createElement("button");
+    btn.className = "launchBtn";
+    btn.innerHTML = `🔍 ${def.label}`;
+    btn.onclick = (e)=>{ e.stopPropagation(); launchResearch(state, site); renderAll(); };
+    div.appendChild(btn);
+    div.onclick = ()=>{ state.selected = {kind:'site', type:site.type}; renderInfoPanel(); };
+    return div;
+  }
 
   const icon = document.createElement("div");
   icon.className = "markerIcon";
@@ -126,24 +137,30 @@ function createSiteMarker(site){
     wrap.appendChild(chrono);
     div.appendChild(wrap);
 
-    const ctrl = document.createElement("div");
-    ctrl.className = "siteControls";
-    const minus = document.createElement("button");
-    minus.className = "wcMinus";
-    minus.textContent = "−";
-    minus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, -1); renderAll(); };
-    const count = document.createElement("span");
-    count.textContent = site.assigned;
-    const plus = document.createElement("button");
-    plus.className = "wcPlus";
-    plus.textContent = "+";
-    plus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, 1); renderAll(); };
-    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
-    div.appendChild(ctrl);
+    div.appendChild(buildAssignControls(site));
+  } else if(site.type !== "hotelville"){
+    div.appendChild(buildAssignControls(site));
   }
 
   div.onclick = ()=>{ state.selected = {kind:'site', type:site.type}; renderInfoPanel(); };
   return div;
+}
+
+function buildAssignControls(site){
+  const ctrl = document.createElement("div");
+  ctrl.className = "siteControls";
+  const minus = document.createElement("button");
+  minus.className = "wcMinus";
+  minus.textContent = "−";
+  minus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, -1); renderAll(); };
+  const count = document.createElement("span");
+  count.textContent = site.assigned;
+  const plus = document.createElement("button");
+  plus.className = "wcPlus";
+  plus.textContent = "+";
+  plus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, 1); renderAll(); };
+  ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
+  return ctrl;
 }
 
 // Mise à jour légère à chaque tick : ne touche qu'au contenu des barres et
@@ -165,20 +182,22 @@ function updateTickVisuals(){
   }
 
   for(const site of state.researchSites){
-    if(site.discovered) continue;
     const el = document.querySelector(`.marker[data-type="${site.type}"]`);
     if(!el) continue;
-    const fill = el.querySelector(".barFill");
-    const chrono = el.querySelector(".barChrono");
-    if(fill){
-      const pct = Math.round((1 - site.effortRemaining/site.effortTotal) * 100);
-      fill.style.width = pct + "%";
-    }
-    if(chrono){
-      chrono.textContent = site.assigned > 0 ? Math.ceil(site.effortRemaining/site.assigned)+"s" : "⏸";
+    if(!site.discovered){
+      const fill = el.querySelector(".barFill");
+      const chrono = el.querySelector(".barChrono");
+      if(fill){
+        const pct = Math.round((1 - site.effortRemaining/site.effortTotal) * 100);
+        fill.style.width = pct + "%";
+      }
+      if(chrono){
+        chrono.textContent = site.assigned > 0 ? Math.ceil(site.effortRemaining/site.assigned)+"s" : "⏸";
+      }
     }
     const count = el.querySelector(".siteControls span");
     if(count) count.textContent = site.assigned;
   }
   renderTopbar();
+  renderVillagePanel();
 }

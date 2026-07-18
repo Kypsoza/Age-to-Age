@@ -1,22 +1,34 @@
-// RENDERING — barre de construction horizontale + tooltip
-// ---------------------------------------------------------------------
+// =====================================================================
+// RENDERING — barre de construction (bas de l'écran)
+// =====================================================================
 function renderBuildBar(){
+  const bar = document.getElementById("buildBar");
+  if(!state.villageFounded){
+    bar.classList.add("hidden");
+    return;
+  }
+  bar.classList.remove("hidden");
+
   const list = document.getElementById("menuList");
   list.innerHTML = "";
-  for(const key of Object.keys(BUILDINGS)){
-    const def = BUILDINGS[key];
-    const b = state.buildings[key];
+  for(const key of MENU_ORDER){
+    const def = MENU_BUILDINGS[key];
+    const b = state.menuBuildings[key];
+    const status = getMenuBuildStatus(state, key);
+
     const item = document.createElement("div");
-    item.className = "menuItem";
-    if(b.level >= def.levels.length) item.classList.add("maxed");
-    item.innerHTML = `<span class="ic">${def.icon}</span>
+    item.className = "menuItem" + (status.locked ? " locked" : "") + (status.maxed ? " maxed" : "");
+    item.innerHTML = `
+      <span class="ic">${status.locked ? "🔒" : def.icon}</span>
       <span>${def.name}</span>
-      <span class="lvl">${b.level>0 ? "Nv. "+b.level+"/"+def.levels.length : "Non construit"}</span>`;
+      <span class="lvl">${b.level>0 ? "Niv. "+b.level+(def.maxLevel?"/"+def.maxLevel:"") : (status.locked ? "Verrouillé" : "Non construit")}</span>
+    `;
     item.onclick = ()=>{
-      if(b.level===0){ doUpgrade(key); }
-      else { toast("Déjà construit — utilise la flèche ▲ sur la carte pour l'améliorer."); }
+      if(status.locked){ toast("Prérequis non remplis — regarde le cadenas."); return; }
+      buildMenuBuilding(state, key);
+      renderAll();
     };
-    item.onmouseenter = (e)=> showMenuTooltip(item, key);
+    item.onmouseenter = ()=> showMenuTooltip(item, key);
     item.onmouseleave = hideMenuTooltip;
     list.appendChild(item);
   }
@@ -25,18 +37,17 @@ function renderBuildBar(){
 let tooltipEl = null;
 function showMenuTooltip(anchorEl, key){
   hideMenuTooltip();
-  const def = BUILDINGS[key];
-  const b = state.buildings[key];
-  const lines = getReqLines(key);
+  const def = MENU_BUILDINGS[key];
+  const b = state.menuBuildings[key];
+  const status = getMenuBuildStatus(state, key);
   tooltipEl = document.createElement("div");
   tooltipEl.className = "menuTooltip";
   let html = `<div class="ttTitle">${def.icon} ${def.name}</div>
-    <div class="ttSub">${b.level>0 ? "Niveau actuel : "+b.level+"/"+def.levels.length : "Pas encore construit"}</div>`;
-  if(lines===null){
+    <div class="ttSub">${b.level>0 ? "Niveau actuel : "+b.level : "Pas encore construit"}</div>`;
+  if(status.maxed){
     html += `<div style="color:var(--moss-bright);font-size:11px;">Niveau maximum atteint.</div>`;
   } else {
-    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin-bottom:4px;">${b.level===0?"Prérequis pour construire :":"Prérequis pour le niveau "+(b.level+1)+" :"}</div>`;
-    for(const l of lines){
+    for(const l of status.lines){
       html += `<div class="reqLine ${l.ok?'ok':'bad'}">${l.label}</div>`;
     }
   }
@@ -49,5 +60,3 @@ function showMenuTooltip(anchorEl, key){
 function hideMenuTooltip(){
   if(tooltipEl){ tooltipEl.remove(); tooltipEl = null; }
 }
-
-// ---------------------------------------------------------------------

@@ -24,21 +24,57 @@ function freshState(){
     decor: generateDecor(rand),
     researchSites: [],
     storage: null,
+    buildingPositions: {},
     villageFounded: false,
     menuBuildings: {},
     selected: null, // {kind:'site', type} | {kind:'storage'} | {kind:'menuBuilding', key}
   };
   for(const key of Object.keys(MENU_BUILDINGS)) s.menuBuildings[key] = { level:0 };
 
+  const lake = s.decor.lake;
+  const WATER_MARGIN = 45; // distance mini au bord de l'eau pour un emplacement "terrestre"
   const taken = [];
+
+  function isOnLand(x,y){
+    return Math.hypot(x-lake.cx, y-lake.cy) >= lake.r + WATER_MARGIN;
+  }
+  function spacingOk(x,y){
+    return taken.every(p => Math.hypot(p.x-x, p.y-y) >= MARKER_MIN_DIST);
+  }
+
+  // Emplacement terrestre standard (sites de recherche, entrepôt, bâtiments
+  // du menu autres que la Cabane de Pêche) — jamais sur l'eau.
   function pickSpot(){
-    for(let attempt=0; attempt<500; attempt++){
+    for(let attempt=0; attempt<600; attempt++){
       const x = 60 + rand()*(MAP_W-120);
       const y = 60 + rand()*(MAP_H-120);
-      const ok = taken.every(p => Math.hypot(p.x-x, p.y-y) >= MARKER_MIN_DIST);
-      if(ok){ taken.push({x,y}); return {x,y}; }
+      if(isOnLand(x,y) && spacingOk(x,y)){ taken.push({x,y}); return {x,y}; }
+    }
+    // fallback : au pire un peu de terre quelque part, quitte à ignorer l'espacement
+    for(let attempt=0; attempt<200; attempt++){
+      const x = 60 + rand()*(MAP_W-120);
+      const y = 60 + rand()*(MAP_H-120);
+      if(isOnLand(x,y)){ taken.push({x,y}); return {x,y}; }
     }
     const x = 60 + rand()*(MAP_W-120), y = 60 + rand()*(MAP_H-120);
+    taken.push({x,y});
+    return {x,y};
+  }
+
+  // Emplacement sur l'eau, réservé à la Cabane de Pêche.
+  function pickSpotOnWater(){
+    for(let attempt=0; attempt<600; attempt++){
+      const angle = rand()*Math.PI*2;
+      const radius = lake.r*(0.45+rand()*0.35);
+      let x = lake.cx + Math.cos(angle)*radius;
+      let y = lake.cy + Math.sin(angle)*radius;
+      x = Math.max(30, Math.min(MAP_W-30, x));
+      y = Math.max(30, Math.min(MAP_H-30, y));
+      if(spacingOk(x,y)){ taken.push({x,y}); return {x,y}; }
+    }
+    const angle = rand()*Math.PI*2;
+    const x = Math.max(30, Math.min(MAP_W-30, lake.cx + Math.cos(angle)*lake.r*0.6));
+    const y = Math.max(30, Math.min(MAP_H-30, lake.cy + Math.sin(angle)*lake.r*0.6));
     taken.push({x,y});
     return {x,y};
   }
@@ -57,6 +93,10 @@ function freshState(){
   }
   const storagePos = pickSpot();
   s.storage = { x:storagePos.x, y:storagePos.y };
+
+  for(const key of Object.keys(MENU_BUILDINGS)){
+    s.buildingPositions[key] = key === "fishcabin" ? pickSpotOnWater() : pickSpot();
+  }
 
   return s;
 }

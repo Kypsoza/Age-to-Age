@@ -20,6 +20,7 @@ function init(){
 
   renderMapBackground();
   renderAll();
+  setupResourceTooltips();
   startLoop();
 
   document.getElementById("btnSave").onclick = ()=> saveGame(false);

@@ -41,5 +41,50 @@ function renderAll(){
   renderInfoPanel();
   renderVillagePanel();
   renderBuildBar();
-  document.getElementById("nightVeil").style.setProperty('--night-op', isNight(state) ? 0.35 : 0);
+  document.getElementById("nightVeil").style.setProperty('--night-op', 0);
+}
+
+// ---------------------------------------------------------------------
+// Tooltips des pastilles de ressources : détail production/consommation
+// ---------------------------------------------------------------------
+function setupResourceTooltips(){
+  const configs = [
+    {id:"pillBois", resKey:"bois", label:"Bois"},
+    {id:"pillNourriture", resKey:"nourriture", label:"Nourriture"},
+    {id:"pillOr", resKey:"or", label:"Or"},
+  ];
+  for(const c of configs){
+    const el = document.getElementById(c.id);
+    if(!el) continue;
+    el.onmouseenter = ()=> showResourceTooltip(el, c.resKey, c.label);
+    el.onmouseleave = hideMenuTooltip;
+  }
+}
+
+function showResourceTooltip(anchorEl, resKey, label){
+  hideMenuTooltip();
+  const producers = state.researchSites.filter(s2 => s2.type===resKey && s2.discovered && s2.assigned>0);
+  tooltipEl = document.createElement("div");
+  tooltipEl.className = "menuTooltip";
+  let html = `<div class="ttTitle">${iconFor(resKey)} ${label}</div>`;
+  if(producers.length===0){
+    html += `<div class="ttSub">Aucune production active actuellement.</div>`;
+  } else {
+    html += `<div class="ttSub">Production active :</div>`;
+    for(const p of producers){
+      const rate = p.assigned*GATHER_RATE;
+      html += `<div class="reqLine ok"><span>${RESEARCH_TYPES[p.type].label} (${p.assigned} hab.)</span><span>+${rate.toFixed(1)}/s</span></div>`;
+    }
+  }
+  if(resKey==="nourriture"){
+    const inc = getResourceIncome(state,"nourriture");
+    if(inc.cons>0){
+      html += `<div class="reqLine bad"><span>Population (${state.population} hab.)</span><span>-${inc.cons.toFixed(1)}/s</span></div>`;
+    }
+  }
+  tooltipEl.innerHTML = html;
+  document.body.appendChild(tooltipEl);
+  const rect = anchorEl.getBoundingClientRect();
+  tooltipEl.style.left = Math.max(8, rect.left + rect.width/2 - tooltipEl.offsetWidth/2) + "px";
+  tooltipEl.style.top = (rect.bottom + 10) + "px";
 }

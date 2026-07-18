@@ -24,8 +24,7 @@ function renderBuildBar(){
       + (unaffordable ? " unaffordable" : "");
     item.innerHTML = `
       <span class="ic">${status.locked ? "🔒" : def.icon}</span>
-      <span>${def.name}</span>
-      <span class="lvl">${b.level>0 ? "Niv. "+b.level+(def.maxLevel?"/"+def.maxLevel:"") : (status.locked ? "Verrouillé" : (unaffordable ? "Ressources insuffisantes" : "Non construit"))}</span>
+      ${b.level>0 ? `<span class="miniLevel">${b.level}</span>` : ""}
     `;
     item.onclick = ()=>{
       if(status.locked){ toast("Prérequis non remplis — regarde le cadenas."); return; }

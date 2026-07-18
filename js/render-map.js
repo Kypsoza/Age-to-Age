@@ -91,6 +91,47 @@ function renderMarkers(){
     el.style.top = site.y + "px";
     layer.appendChild(el);
   }
+
+  for(const key of Object.keys(MENU_BUILDINGS)){
+    if(state.menuBuildings[key].level <= 0) continue;
+    const pos = state.buildingPositions[key];
+    const el = createMenuBuildingMarker(key);
+    el.style.left = pos.x + "px";
+    el.style.top = pos.y + "px";
+    layer.appendChild(el);
+  }
+}
+
+function createMenuBuildingMarker(key){
+  const def = MENU_BUILDINGS[key];
+  const b = state.menuBuildings[key];
+  const status = getMenuBuildStatus(state, key);
+
+  const div = document.createElement("div");
+  div.className = "marker builtBuilding";
+  div.dataset.buildingKey = key;
+
+  if(!status.maxed){
+    const arrow = document.createElement("button");
+    arrow.className = "upgradeArrow";
+    arrow.textContent = "▲";
+    arrow.title = "Améliorer";
+    arrow.onclick = (e)=>{ e.stopPropagation(); buildMenuBuilding(state, key); renderAll(); };
+    div.appendChild(arrow);
+  }
+
+  const icon = document.createElement("div");
+  icon.className = "markerIcon";
+  icon.textContent = def.icon;
+  div.appendChild(icon);
+
+  const badge = document.createElement("div");
+  badge.className = "levelBadge";
+  badge.textContent = "Nv." + b.level;
+  div.appendChild(badge);
+
+  div.onclick = ()=>{ state.selected = {kind:'menuBuilding', key}; renderInfoPanel(); };
+  return div;
 }
 
 function createStorageMarker(){
@@ -167,8 +208,7 @@ function buildAssignControls(site){
 // compteurs déjà présents dans le DOM, ne recrée jamais les marqueurs —
 // c'est ce qui garantit qu'un clic/survol en cours n'est jamais interrompu.
 function updateTickVisuals(){
-  const night = isNight(state);
-  document.getElementById("nightVeil").style.setProperty('--night-op', night ? 0.35 : 0);
+  document.getElementById("nightVeil").style.setProperty('--night-op', 0);
 
   if(state.justDiscovered && state.justDiscovered.length > 0){
     // Un site vient d'être découvert (icône à changer, contrôles à retirer,

@@ -1,5 +1,6 @@
+// =====================================================================
 // GAME LOOP
-// ---------------------------------------------------------------------
+// =====================================================================
 let loopTimer = null;
 function startLoop(){
   if(loopTimer) clearInterval(loopTimer);
@@ -10,15 +11,14 @@ function startLoop(){
   }, TICK_MS);
 }
 
-// ---------------------------------------------------------------------
+// =====================================================================
 // INIT
-// ---------------------------------------------------------------------
+// =====================================================================
 function init(){
   const existing = loadGame();
-  state = (existing && existing.buildings) ? existing : freshState();
+  state = (existing && existing.researchSites) ? existing : freshState();
 
   buildGridDOM();
-  setupResourceTooltips();
   renderAll();
   startLoop();
 
@@ -33,7 +33,6 @@ function init(){
     const btn = document.getElementById("btnReset");
     if(btn.dataset.armed === "1"){
       state = freshState();
-      selectedInfoTarget = null;
       localStorage.removeItem(SAVE_KEY);
       saveGame(true);
       renderAll();

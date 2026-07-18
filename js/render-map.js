@@ -1,7 +1,6 @@
+// =====================================================================
 // RENDERING — carte
-// ---------------------------------------------------------------------
-let selectedInfoTarget = null; // {kind:'building', key} | {kind:'tile', x,y} | {kind:'townhall'}
-
+// =====================================================================
 function buildGridDOM(){
   const grid = document.getElementById("grid");
   grid.style.gridTemplateColumns = `repeat(${GRID_W}, ${TILE_PX}px)`;
@@ -28,107 +27,101 @@ function renderGrid(){
     div.style.setProperty('--night-op', night ? 0.38 : 0);
     div.innerHTML = "";
 
-    if(t.x===TOWNHALL_POS.x && t.y===TOWNHALL_POS.y){
-      const span = document.createElement("span");
-      span.className = "buildingIcon"; span.textContent = "🏛️";
-      div.appendChild(span);
-    } else {
-      const bKey = SLOT_BY_COORD[t.x+","+t.y];
-      if(bKey) renderBuildingOnTile(div, bKey);
+    if(state.storage.x===t.x && state.storage.y===t.y){
+      renderStorageMarker(div);
+      continue;
     }
+    const site = siteAt(state, t.x, t.y);
+    if(site) renderSiteMarker(div, site);
   }
 }
 
-function renderBuildingOnTile(div, key){
-  const def = BUILDINGS[key];
-  const b = state.buildings[key];
+function renderStorageMarker(div){
   const span = document.createElement("span");
   span.className = "buildingIcon";
-  span.textContent = def.icon;
-  if(b.level===0){
-    span.style.opacity = 0.35;
-    div.classList.add("emptySlot");
-  }
+  span.textContent = "📦";
+  div.appendChild(span);
+  div.classList.add("storageMarker");
+}
+
+function renderSiteMarker(div, site){
+  const def = RESEARCH_TYPES[site.type];
+  const span = document.createElement("span");
+  span.className = "buildingIcon";
+  span.textContent = site.discovered ? def.revealedIcon : def.icon;
+  if(site.discovered) div.classList.add("discoveredSite");
+  else div.classList.add("pendingSite");
   div.appendChild(span);
 
-  if(b.level>0){
-    const badge = document.createElement("span");
-    badge.className = "levelBadge";
-    badge.textContent = "Nv."+b.level;
-    div.appendChild(badge);
-
-    if(def.produces){
-      const lvl = def.levels[b.level-1];
+  if(!site.discovered){
+    // Barre de progression + chrono, uniquement si de l'effort a déjà été investi ou en cours
+    const pct = Math.round((1 - site.effortRemaining/site.effortTotal) * 100);
+    if(pct > 0 || site.assigned > 0){
       const wrap = document.createElement("div");
       wrap.className = "barWrap";
       const fill = document.createElement("div");
       fill.className = "barFill";
-      fill.style.width = Math.min(100, ((b.inv[def.produces]||0)/lvl.localCap)*100)+"%";
+      fill.style.width = pct + "%";
       wrap.appendChild(fill);
+      const chrono = document.createElement("span");
+      chrono.className = "barChrono";
+      chrono.textContent = site.assigned > 0 ? Math.ceil(site.effortRemaining/site.assigned)+"s" : "⏸";
+      wrap.appendChild(chrono);
       div.appendChild(wrap);
     }
 
-    if(b.level < def.levels.length){
-      const arrow = document.createElement("button");
-      arrow.className = "upgradeArrow";
-      arrow.textContent = "▲";
-      arrow.title = "Améliorer";
-      arrow.onclick = (e)=>{ e.stopPropagation(); doUpgrade(key); };
-      div.appendChild(arrow);
-    }
-
-    if(def.produces){
-      const lvl = def.levels[b.level-1];
-      const ctrl = document.createElement("div");
-      ctrl.className = "workerControls";
-      const minus = document.createElement("button");
-      minus.className = "wcMinus";
-      minus.textContent = "−";
-      minus.onclick = (e)=>{ e.stopPropagation(); adjustWorkers(key,-1); };
-      const count = document.createElement("span");
-      count.textContent = `${b.workers||0}/${lvl.maxWorkers}`;
-      const plus = document.createElement("button");
-      plus.className = "wcPlus";
-      plus.textContent = "+";
-      plus.onclick = (e)=>{ e.stopPropagation(); adjustWorkers(key,1); };
-      ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
-      div.appendChild(ctrl);
-    }
+    const ctrl = document.createElement("div");
+    ctrl.className = "siteControls";
+    const minus = document.createElement("button");
+    minus.className = "wcMinus";
+    minus.textContent = "−";
+    minus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, -1); renderAll(); };
+    const count = document.createElement("span");
+    count.textContent = site.assigned;
+    const plus = document.createElement("button");
+    plus.className = "wcPlus";
+    plus.textContent = "+";
+    plus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, 1); renderAll(); };
+    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
+    div.appendChild(ctrl);
   }
 }
 
-function onTileClick(x,y){
-  if(x===TOWNHALL_POS.x && y===TOWNHALL_POS.y){
-    selectedInfoTarget = {kind:'townhall'};
-  } else {
-    const bKey = SLOT_BY_COORD[x+","+y];
-    selectedInfoTarget = bKey ? {kind:'building', key:bKey} : {kind:'tile', x, y};
-  }
-  renderInfoPanel();
-}
-
-// Mise à jour "légère" appelée à chaque tick de simulation : ne touche qu'aux
-// barres de progression, au voile nuit et au topbar — ne recrée AUCUN élément
-// DOM. Ça évite de détruire les boutons +/- travailleurs sous la souris à
-// chaque tick (c'était la cause du scintillement / clics ratés signalés).
+// Mise à jour légère appelée à chaque tick : ne touche qu'aux barres de
+// progression et au voile nuit, sans recréer les boutons +/- (évite le
+// scintillement déjà corrigé en Phase 0 lors de la première mouture).
 function updateTickVisuals(){
   const night = isNight(state);
-  for(const key of Object.keys(BUILDINGS)){
-    const def = BUILDINGS[key];
-    if(!def.produces) continue;
-    const b = state.buildings[key];
-    if(b.level===0) continue;
-    const slot = def.slot;
-    const div = document.querySelector(`.tile[data-x="${slot.x}"][data-y="${slot.y}"]`);
+  for(const site of state.researchSites){
+    const div = document.querySelector(`.tile[data-x="${site.x}"][data-y="${site.y}"]`);
     if(!div) continue;
     div.style.setProperty('--night-op', night ? 0.38 : 0);
-    const lvl = def.levels[b.level-1];
+    if(site.discovered) continue;
     const fill = div.querySelector(".barFill");
-    if(fill) fill.style.width = Math.min(100, ((b.inv[def.produces]||0)/lvl.localCap)*100)+"%";
-    const count = div.querySelector(".workerControls span");
-    if(count) count.textContent = `${b.workers||0}/${lvl.maxWorkers}`;
+    const chrono = div.querySelector(".barChrono");
+    if(fill){
+      const pct = Math.round((1 - site.effortRemaining/site.effortTotal) * 100);
+      fill.style.width = pct + "%";
+    }
+    if(chrono){
+      chrono.textContent = site.assigned > 0 ? Math.ceil(site.effortRemaining/site.assigned)+"s" : "⏸";
+    }
+    const count = div.querySelector(".siteControls span");
+    if(count) count.textContent = site.assigned;
   }
   renderTopbar();
 }
 
-// ---------------------------------------------------------------------
+function onTileClick(x,y){
+  if(state.storage.x===x && state.storage.y===y){
+    state.selected = {kind:'storage'};
+  } else {
+    const site = siteAt(state,x,y);
+    if(site){
+      state.selected = {kind:'site', type:site.type};
+    } else {
+      state.selected = {kind:'tile', x, y};
+    }
+  }
+  renderInfoPanel();
+}

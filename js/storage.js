@@ -1,5 +1,6 @@
+// =====================================================================
 // SAVE / LOAD
-// ---------------------------------------------------------------------
+// =====================================================================
 function saveGame(silent){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
@@ -15,7 +16,7 @@ function exportGame(){
   const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `citybuilder_save_jour${state.day}.json`;
+  a.href = url; a.download = `age2age_save_jour${state.day}.json`;
   a.click();
   URL.revokeObjectURL(url);
   toast("Sauvegarde exportée.");
@@ -25,9 +26,8 @@ function importGame(file){
   reader.onload = (e)=>{
     try{
       const data = JSON.parse(e.target.result);
-      if(!data.tiles || !data.resources || !data.buildings) throw new Error("Structure invalide.");
+      if(!data.tiles || !data.researchSites || !data.storage) throw new Error("Structure invalide.");
       state = data;
-      selectedInfoTarget = null;
       renderAll();
       toast("Sauvegarde importée avec succès.");
     }catch(err){
@@ -36,5 +36,3 @@ function importGame(file){
   };
   reader.readAsText(file);
 }
-
-// ---------------------------------------------------------------------

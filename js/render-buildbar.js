@@ -15,22 +15,26 @@ function renderBuildBar(){
     const def = MENU_BUILDINGS[key];
     const b = state.menuBuildings[key];
     const built = b.level > 0;
-    // Une fois construit, on ne recalcule le statut que pour l'affichage
-    // (le tooltip a toujours besoin de savoir si un niveau sup. existe),
-    // mais plus aucune construction/amélioration ne se fait depuis ici.
     const status = getMenuBuildStatus(state, key);
-    const unaffordable = !built && !status.locked && !status.lines.every(l=>l.ok);
+    const unaffordable = !built && !b.building && !status.locked && !status.lines.every(l=>l.ok);
 
     const item = document.createElement("div");
     item.className = "menuItem"
       + (status.locked && !built ? " locked" : "")
-      + (built ? " built" : "")
+      + (b.building ? " constructing" : "")
+      + (built && !b.building ? " built" : "")
       + (unaffordable ? " unaffordable" : "");
+
+    let badge = "";
+    if(b.building) badge = `<span class="builtCheck constructingIcon">🚧</span>`;
+    else if(built) badge = `<span class="builtCheck">✓</span>`;
+
     item.innerHTML = `
-      <span class="ic">${(status.locked && !built) ? "🔒" : def.icon}</span>
-      ${built ? `<span class="builtCheck">✓</span>` : ""}
+      <span class="ic">${(status.locked && !built) ? "🔒" : (b.building ? "🚧" : def.icon)}</span>
+      ${badge}
     `;
     item.onclick = ()=>{
+      if(b.building){ toast("Construction en cours..."); return; }
       if(built){
         toast("Déjà construit — utilise la flèche ▲ sur la carte pour l'améliorer.");
         return;
@@ -57,7 +61,9 @@ function showMenuTooltip(anchorEl, key){
     <div class="ttSub">${b.level>0 ? "Niveau actuel : "+b.level+(def.maxLevel?"/"+def.maxLevel:"") : "Pas encore construit"}</div>
     <div class="ttDesc">${def.desc}</div>`;
 
-  if(b.level > 0){
+  if(b.building){
+    html += `<div class="reqLine ok">🚧 En construction : ${b.buildTimeRemaining}s restantes</div>`;
+  } else if(b.level > 0){
     html += `<div class="reqLine ok" style="margin-top:6px;">✓ Construit — améliore-le depuis la carte</div>`;
   } else if(status.locked){
     html += `<div style="margin-top:6px;">`;
@@ -66,7 +72,7 @@ function showMenuTooltip(anchorEl, key){
     }
     html += `</div>`;
   } else {
-    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin:6px 0 4px;">Coût de construction :</div>`;
+    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin:6px 0 4px;">Coût de construction (${buildTimeForLevel(b.level)}s) :</div>`;
     for(const l of status.lines){
       html += `<div class="reqLine ${l.ok?'ok':'bad'}">${l.label}</div>`;
     }

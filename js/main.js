@@ -17,7 +17,8 @@ function startLoop(){
 function init(){
   const existing = loadGame();
   const compatible = existing && existing.researchSites && existing.decor
-    && existing.menuBuildings && existing.buildingPositions && existing.storage;
+    && existing.menuBuildings && existing.buildingPositions && existing.storage
+    && existing.upgrades && typeof existing.populationReserve === "number";
   state = compatible ? existing : freshState();
 
   // Les boutons sont branchés AVANT le premier rendu : si jamais le rendu

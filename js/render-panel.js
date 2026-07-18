@@ -1,4 +1,68 @@
 // =====================================================================
+// RENDERING — panneau de recrutement
+// =====================================================================
+function renderRecruitPanel(){
+  const panel = document.getElementById("recruitPanel");
+  if(state.populationReserve <= 0){
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+  const cost = recruitCost(state);
+  const have = Math.floor(state.resources.nourriture||0);
+  panel.innerHTML = `
+    <div class="villageBanner">
+      <div class="villageTitle">👥 Recruter un habitant</div>
+      <div class="villageDesc">${state.populationReserve} en réserve, prêt(s) à intégrer le village.</div>
+      <div class="invRow ${have>=cost?'ok':'bad'}"><span>${iconFor('nourriture')} ${have}/${cost}</span></div>
+      <button id="btnRecruit" class="foundBtn">Recruter (${cost} 🌾)</button>
+    </div>`;
+  document.getElementById("btnRecruit").onclick = ()=>{
+    recruitHabitant(state);
+    renderAll();
+  };
+}
+
+// =====================================================================
+// RENDERING — panneau des améliorations d'income (droite)
+// =====================================================================
+function renderUpgradesPanel(){
+  const panel = document.getElementById("upgradesPanel");
+  const anyBuilt = Object.values(UPGRADES).some(u => state.menuBuildings[u.buildingKey].level > 0);
+  if(!anyBuilt){
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+
+  let html = `<div class="villageTitle" style="margin-bottom:8px;">⚙️ Améliorations</div>`;
+  for(const [resKey, def] of Object.entries(UPGRADES)){
+    const buildingLevel = state.menuBuildings[def.buildingKey].level;
+    if(buildingLevel <= 0) continue; // bâtiment pas encore construit : rien à afficher pour cette ressource
+    const status = getUpgradeStatus(state, resKey);
+    html += `<div class="upgradeRow">
+      <div class="upgradeRowHead">
+        <span>${iconFor(resKey)} ${def.label}</span>
+        <span class="upgradeTierBadge">Palier ${status.currentTier}/${status.maxTiers}</span>
+      </div>`;
+    if(!status.available){
+      html += `<div style="color:var(--bone-dim);font-size:10.5px;">Améliore ${MENU_BUILDINGS[def.buildingKey].name} pour débloquer le prochain palier.</div>`;
+    } else {
+      for(const l of status.lines){
+        html += `<div class="reqLine ${l.ok?'ok':'bad'}">${l.label}</div>`;
+      }
+      html += `<button class="foundBtn upgradeBuyBtn" data-res="${resKey}">Acheter (+100%)</button>`;
+    }
+    html += `</div>`;
+  }
+  panel.innerHTML = html;
+
+  panel.querySelectorAll(".upgradeBuyBtn").forEach(btn=>{
+    btn.onclick = ()=>{ buyUpgrade(state, btn.dataset.res); renderAll(); };
+  });
+}
+
+// =====================================================================
 // RENDERING — panneau de fondation du Village
 // =====================================================================
 function renderVillagePanel(){
@@ -58,9 +122,21 @@ function renderInfoPanel(){
         html += `<button class="foundBtn" id="btnBuildMenuItem" style="margin-top:10px;">${b.level===0?'Construire':'Améliorer'}</button>`;
       }
     }
+    if(ALT_GATHER[sel.key] && b.level > 0){
+      html += `<hr style="border-color:var(--line);margin:10px 0;">
+        <div class="invRow"><span>Habitants assignés</span><span>${b.assigned||0}/${gatherCapFor(state)}</span></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+          <button class="panelWorkerBtn" id="panelAltMinus">− Retirer</button>
+          <button class="panelWorkerBtn" id="panelAltPlus">+ Assigner</button>
+        </div>`;
+    }
     panel.innerHTML = html;
     const buildBtn = document.getElementById("btnBuildMenuItem");
     if(buildBtn) buildBtn.onclick = ()=>{ buildMenuBuilding(state, sel.key); renderAll(); };
+    const altMinus = document.getElementById("panelAltMinus");
+    const altPlus = document.getElementById("panelAltPlus");
+    if(altMinus) altMinus.onclick = ()=>{ assignToAltGather(state, sel.key, -1); renderAll(); };
+    if(altPlus) altPlus.onclick = ()=>{ assignToAltGather(state, sel.key, 1); renderAll(); };
     return;
   }
 

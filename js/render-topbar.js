@@ -23,10 +23,20 @@ function renderTopbar(){
   setDelta("deltaNourriture", getResourceIncome(state,"nourriture").net);
   setDelta("deltaOr", getResourceIncome(state,"or").net);
 
+  const boisFound = !!siteByType(state,"bois")?.discovered;
+  const foodFound = !!siteByType(state,"nourriture")?.discovered;
+  const orFound = !!siteByType(state,"or")?.discovered;
+  document.getElementById("pillBois").classList.toggle("hidden", !boisFound);
+  document.getElementById("pillNourriture").classList.toggle("hidden", !foodFound);
+  document.getElementById("pillOr").classList.toggle("hidden", !orFound);
+  document.getElementById("pillPierre").classList.add("hidden"); // pas encore de source de pierre (Phase 4)
+
   const free = getFreePopulation(state);
   const busy = state.population - free;
   document.getElementById("popCount").textContent = state.population;
-  document.getElementById("popDetail").textContent = `(${free} libre${free>1?"s":""}, ${busy} occupé${busy>1?"s":""})`;
+  let detail = `(${free} libre${free>1?"s":""}, ${busy} occupé${busy>1?"s":""})`;
+  if(state.populationReserve > 0) detail += ` · ${state.populationReserve} en réserve`;
+  document.getElementById("popDetail").textContent = detail;
 
   const season = currentSeason(state);
   document.getElementById("seasonIcon").textContent = season.icon;
@@ -40,6 +50,8 @@ function renderAll(){
   renderMarkers();
   renderInfoPanel();
   renderVillagePanel();
+  renderRecruitPanel();
+  renderUpgradesPanel();
   renderBuildBar();
   document.getElementById("nightVeil").style.setProperty('--night-op', 0);
 }

@@ -87,6 +87,7 @@ main{flex:1;display:flex;overflow:hidden;}
 .marker.storageMarker .markerIcon{border-color:var(--bone-dim);}
 .marker.unlaunchedSite .markerIcon{opacity:.7;}
 .marker.builtBuilding .markerIcon{border-color:var(--blue);background:rgba(10,14,20,.45);}
+.marker.buildingInProgress .markerIcon{border-color:var(--warn);animation:pulseBuild 1.4s infinite;}
 .marker:hover .markerIcon{background:rgba(10,14,20,.85);}
 
 .upgradeArrow{
@@ -116,12 +117,12 @@ main{flex:1;display:flex;overflow:hidden;}
 .barChrono{position:relative;z-index:1;font-family:var(--font-mono);font-size:11.5px;color:var(--bone);line-height:1;}
 
 .siteControls{
-  display:flex;align-items:center;gap:8px;background:rgba(10,14,20,.96);border:1px solid var(--line);
-  border-radius:17px;padding:4px 8px;white-space:nowrap;
+  display:flex;align-items:center;gap:5px;background:rgba(10,14,20,.9);border:1px solid var(--line);
+  border-radius:13px;padding:2px 5px;white-space:nowrap;
 }
 .siteControls button{
-  width:30px;height:30px;border-radius:50%;border:none;background:var(--bg-panel-2);color:var(--bone);
-  font-size:18px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+  width:20px;height:20px;border-radius:50%;border:none;background:var(--bg-panel-2);color:var(--bone);
+  font-size:13px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
   transition:background .1s;
 }
 .siteControls button.wcMinus:hover{background:var(--alert);}
@@ -164,6 +165,14 @@ main{flex:1;display:flex;overflow:hidden;}
 .invRow.ok{color:var(--green-bright);}
 .invRow.bad{color:var(--bad);}
 
+.upgradeRow{
+  background:var(--bg-panel-2);border:1px solid var(--line);border-radius:8px;
+  padding:10px;margin-bottom:10px;
+}
+.upgradeRowHead{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:6px;color:var(--bone);}
+.upgradeTierBadge{font-family:var(--font-mono);font-size:10.5px;color:var(--blue-bright);background:rgba(47,143,255,.12);padding:2px 8px;border-radius:10px;}
+.upgradeBuyBtn{margin-top:6px;}
+
 /* ---------- BUILD BAR — gros icônes rondes façon city-builder ---------- */
 #buildBar{
   flex-shrink:0;display:flex;gap:16px;align-items:center;
@@ -196,6 +205,9 @@ main{flex:1;display:flex;overflow:hidden;}
 }
 .menuItem.built{border-color:var(--green);cursor:default;}
 .menuItem.built:hover{box-shadow:0 0 16px var(--green-glow);transform:none;}
+.menuItem.constructing{border-color:var(--warn);animation:pulseBuild 1.4s infinite;}
+.menuItem.constructing .builtCheck{background:var(--warn);}
+@keyframes pulseBuild{0%,100%{box-shadow:0 0 8px rgba(245,185,66,.3);}50%{box-shadow:0 0 20px rgba(245,185,66,.7);}}
 .menuItem.maxed{border-color:var(--green);box-shadow:0 0 18px var(--green-glow);}
 .menuItem.locked{opacity:.4;cursor:not-allowed;}
 .menuItem.locked:hover{border-color:var(--line);box-shadow:none;transform:none;}

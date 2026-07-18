@@ -7,7 +7,7 @@ const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
 const NIGHT_START_RATIO = 0.62;
-const SAVE_KEY = "age2age_save_phase1_v3";
+const SAVE_KEY = "age2age_save_phase1_v4";
 const AUTOSAVE_MS = 120000;
 
 const SEASONS = [
@@ -30,6 +30,8 @@ const RESEARCH_TYPES = {
     desc:"Des vestiges technologiques enfouis, brillants comme de l'or." },
   hotelville: { label:"Emplacement de l'Hôtel de Ville", icon:"❓", revealedIcon:"🏛️", effort:35,
     desc:"L'endroit où, inconsciemment, la tribu se sent chez elle. Un écho de mémoire génétique." },
+  pierre:     { label:"Carrière de Pierre", icon:"❓", revealedIcon:"🪨", effort:45,
+    desc:"Un affleurement rocheux, exploitable une fois le Village fondé.", unlockedByVillage:true },
 };
 
 const TERRAIN_LABELS = {
@@ -42,7 +44,26 @@ const GATHER_RATE = 0.4;      // ressource / tick / habitant assigné
 const GATHER_CAP_BASE = 3;    // plafond par zone avant que l'Hôtel de Ville existe
 const GATHER_CAP_PER_HDV_LEVEL = 5; // bonus de plafond par niveau d'Hôtel de Ville
 const FOOD_CONSUMPTION = 0.12; // nourriture / tick / habitant, uniquement si la zone nourriture a du monde assigné ce tick
-const LEVEL_COST_MULTIPLIER = 1.6; // multiplicateur de coût par niveau pour les bâtiments à niveaux illimités
+const LEVEL_COST_MULTIPLIER = 1.75; // multiplicateur de coût par niveau pour les bâtiments à niveaux illimités
+
+// Temps de construction (en ticks) : ralentit volontairement la progression
+// pour que chaque niveau soit une vraie décision, pas un clic instantané.
+const BUILD_TIME_BASE = 18;     // ticks pour un niveau 0→1
+const BUILD_TIME_PER_LEVEL = 9; // ticks supplémentaires par niveau déjà atteint
+
+// Coût d'un habitant recruté depuis la réserve (Maison) vers la population
+// active. Croissance géométrique : les premiers sont abordables, puis ça
+// ralentit nettement pour forcer une gestion progressive de la nourriture.
+const RECRUIT_COST_BASE = 8;      // nourriture pour le 1er recrutement
+const RECRUIT_COST_GROWTH = 1.4;  // multiplicateur par recrutement déjà effectué
+
+// Pavillon de Chasse et Cabane de Pêche sont de vrais points de récolte
+// alternatifs pour la nourriture, avec un meilleur rendement que le site de
+// base (multiplicateur appliqué à GATHER_RATE).
+const ALT_GATHER = {
+  huntlodge: { resource:"nourriture", rateMult:1.5 },
+  fishcabin: { resource:"nourriture", rateMult:2.0 },
+};
 
 const VILLAGE_COST = { bois:30, or:15 };
 
@@ -53,19 +74,31 @@ const VILLAGE_COST = { bois:30, or:15 };
 const MENU_BUILDINGS = {
   townhall: { name:"Hôtel de Ville", icon:"🏛️", cost:{bois:25,or:10}, requires:[], maxLevel:null,
     desc:"Le cœur de la tribu. Débloque tous les autres bâtiments. Chaque niveau augmente de "+GATHER_CAP_PER_HDV_LEVEL+" le plafond d'habitants assignables par zone/bâtiment." },
-  house: { name:"Maison", icon:"🏠", cost:{bois:15}, requires:["townhall"], maxLevel:null,
-    desc:"+5 habitants par niveau, immédiatement disponibles. Niveaux illimités." },
-  forge: { name:"Forge", icon:"⚒️", cost:{bois:20,or:10}, requires:["townhall"], maxLevel:1,
-    desc:"Débloque les améliorations d'outils (effet complet en Phase 7)." },
-  huntlodge: { name:"Pavillon de Chasse", icon:"🏹", cost:{bois:15}, requires:["forge"], maxLevel:1,
-    desc:"Chasse pour la nourriture, bon rendement (effet complet en Phase 4/7)." },
-  treasury: { name:"Salle du Trésor", icon:"💰", cost:{or:20}, requires:["forge"], maxLevel:1,
-    desc:"Débloque les améliorations d'or (effet complet en Phase 7)." },
-  fishcabin: { name:"Cabane de Pêche", icon:"🎣", cost:{bois:20}, requires:["huntlodge"], maxLevel:1,
-    desc:"Pêche pour la nourriture, meilleur rendement que la chasse (effet complet en Phase 4/7)." },
-  mill: { name:"Moulin", icon:"🌾", cost:{bois:25,or:10}, requires:["huntlodge","fishcabin"], requiresAny:true, maxLevel:1,
-    desc:"Débloque les améliorations de nourriture (effet complet en Phase 7)." },
-  barracks: { name:"Caserne", icon:"🛡️", cost:{bois:30,or:15}, requires:["house"], requiresLevel:{house:2}, maxLevel:1,
+  house: { name:"Maison", icon:"🏠", cost:{bois:15,pierre:8}, requires:["townhall"], maxLevel:null,
+    desc:"+5 places en réserve par niveau. Chaque habitant doit ensuite être recruté (coûte de la nourriture) pour devenir actif." },
+  forge: { name:"Forge", icon:"⚒️", cost:{bois:20,pierre:10,or:5}, requires:["townhall"], maxLevel:null,
+    desc:"Chaque niveau débloque un palier d'amélioration du Bois ET de la Pierre (+100% cumulatif chacun, achetable à droite)." },
+  huntlodge: { name:"Pavillon de Chasse", icon:"🏹", cost:{bois:18,pierre:5}, requires:["forge"], maxLevel:1,
+    desc:"Devient un point de récolte de nourriture sur la carte, ×1.5 le rendement d'un site classique." },
+  treasury: { name:"Salle du Trésor", icon:"💰", cost:{pierre:12,or:15}, requires:["forge"], maxLevel:null,
+    desc:"Chaque niveau débloque un palier d'amélioration de l'Or (+100% cumulatif, achetable à droite)." },
+  fishcabin: { name:"Cabane de Pêche", icon:"🎣", cost:{bois:15,pierre:8}, requires:["huntlodge"], maxLevel:1,
+    desc:"Point de récolte de nourriture sur l'eau, ×2 le rendement d'un site classique (meilleur que le Pavillon)." },
+  mill: { name:"Moulin", icon:"🌾", cost:{bois:15,pierre:15,or:5}, requires:["huntlodge","fishcabin"], requiresAny:true, maxLevel:null,
+    desc:"Chaque niveau débloque un palier d'amélioration de la Nourriture (+100% cumulatif, achetable à droite)." },
+  barracks: { name:"Caserne", icon:"🛡️", cost:{bois:20,pierre:20,or:10}, requires:["house"], requiresLevel:{house:2}, maxLevel:1,
     desc:"Recrute des soldats pour la défense (effet complet en Phase 8)." },
 };
 const MENU_ORDER = ["townhall","house","forge","huntlodge","fishcabin","treasury","mill","barracks"];
+
+// Améliorations d'income par ressource : chaque palier (tier) coûte de plus
+// en plus cher et ajoute +100% cumulatif à l'income de cette ressource.
+// Le nombre de paliers achetables est plafonné par le niveau du bâtiment
+// "buildingKey" correspondant (Forge/Trésor/Moulin).
+const UPGRADES = {
+  bois:       { buildingKey:"forge",    label:"Bois",       cost:{or:15} },
+  pierre:     { buildingKey:"forge",    label:"Pierre",     cost:{bois:15} },
+  or:         { buildingKey:"treasury", label:"Or",         cost:{bois:15,pierre:10} },
+  nourriture: { buildingKey:"mill",     label:"Nourriture", cost:{bois:10,or:10} },
+};
+const UPGRADE_COST_MULTIPLIER = 1.6;

@@ -86,6 +86,7 @@ function renderMarkers(){
 
   for(const site of state.researchSites){
     if(site.locked) continue;
+    if(site.type === "hotelville" && (state.menuBuildings.townhall.level > 0 || state.menuBuildings.townhall.building)) continue;
     const el = createSiteMarker(site);
     el.style.left = site.x + "px";
     el.style.top = site.y + "px";
@@ -93,7 +94,8 @@ function renderMarkers(){
   }
 
   for(const key of Object.keys(MENU_BUILDINGS)){
-    if(state.menuBuildings[key].level <= 0) continue;
+    const b = state.menuBuildings[key];
+    if(b.level <= 0 && !b.building) continue;
     const pos = state.buildingPositions[key];
     const el = createMenuBuildingMarker(key);
     el.style.left = pos.x + "px";
@@ -105,11 +107,35 @@ function renderMarkers(){
 function createMenuBuildingMarker(key){
   const def = MENU_BUILDINGS[key];
   const b = state.menuBuildings[key];
-  const status = getMenuBuildStatus(state, key);
-
   const div = document.createElement("div");
-  div.className = "marker builtBuilding";
   div.dataset.buildingKey = key;
+
+  if(b.building){
+    div.className = "marker buildingInProgress";
+    const icon = document.createElement("div");
+    icon.className = "markerIcon";
+    icon.textContent = "🚧";
+    div.appendChild(icon);
+
+    const pct = Math.round((1 - b.buildTimeRemaining/b.buildTimeTotal) * 100);
+    const wrap = document.createElement("div");
+    wrap.className = "barWrap";
+    const fill = document.createElement("div");
+    fill.className = "barFill";
+    fill.style.width = pct + "%";
+    wrap.appendChild(fill);
+    const chrono = document.createElement("span");
+    chrono.className = "barChrono";
+    chrono.textContent = b.buildTimeRemaining + "s";
+    wrap.appendChild(chrono);
+    div.appendChild(wrap);
+
+    div.onclick = ()=>{ state.selected = {kind:'menuBuilding', key}; renderInfoPanel(); };
+    return div;
+  }
+
+  const status = getMenuBuildStatus(state, key);
+  div.className = "marker builtBuilding";
 
   if(!status.maxed){
     const arrow = document.createElement("button");
@@ -131,6 +157,23 @@ function createMenuBuildingMarker(key){
   badge.className = "levelBadge";
   badge.textContent = "Nv." + b.level;
   div.appendChild(badge);
+
+  if(ALT_GATHER[key]){
+    const ctrl = document.createElement("div");
+    ctrl.className = "siteControls";
+    const minus = document.createElement("button");
+    minus.className = "wcMinus";
+    minus.textContent = "−";
+    minus.onclick = (e)=>{ e.stopPropagation(); assignToAltGather(state, key, -1); renderAll(); };
+    const count = document.createElement("span");
+    count.textContent = b.assigned || 0;
+    const plus = document.createElement("button");
+    plus.className = "wcPlus";
+    plus.textContent = "+";
+    plus.onclick = (e)=>{ e.stopPropagation(); assignToAltGather(state, key, 1); renderAll(); };
+    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
+    div.appendChild(ctrl);
+  }
 
   div.onclick = ()=>{ state.selected = {kind:'menuBuilding', key}; renderInfoPanel(); };
   return div;
@@ -212,14 +255,20 @@ function buildAssignControls(site){
 function updateTickVisuals(){
   document.getElementById("nightVeil").style.setProperty('--night-op', 0);
 
-  if(state.justDiscovered && state.justDiscovered.length > 0){
-    // Un site vient d'être découvert (icône à changer, contrôles à retirer,
-    // éventuellement de nouveaux sites déverrouillés à faire apparaître) :
-    // un rebuild complet des marqueurs est nécessaire, mais ça ne se
-    // produit qu'à ce moment précis, jamais à chaque tick — pas de risque
-    // de scintillement.
+  const discoveries = state.justDiscovered && state.justDiscovered.length > 0;
+  const completions = state.justCompleted && state.justCompleted.length > 0;
+  if(discoveries || completions){
+    // Un site vient d'être découvert ou une construction vient de se
+    // terminer (icône à changer, contrôles à ajouter/retirer) : un rebuild
+    // complet des marqueurs est nécessaire, mais ça ne se produit qu'à ce
+    // moment précis, jamais à chaque tick — pas de risque de scintillement.
     renderMarkers();
     state.justDiscovered = [];
+    state.justCompleted = [];
+    renderTopbar();
+    renderVillagePanel();
+    renderRecruitPanel();
+    renderUpgradesPanel();
     return;
   }
 
@@ -240,6 +289,26 @@ function updateTickVisuals(){
     const count = el.querySelector(".siteControls span");
     if(count) count.textContent = site.assigned;
   }
+
+  for(const key of Object.keys(MENU_BUILDINGS)){
+    const b = state.menuBuildings[key];
+    if(b.building){
+      const el = document.querySelector(`.marker[data-building-key="${key}"]`);
+      if(!el) continue;
+      const fill = el.querySelector(".barFill");
+      const chrono = el.querySelector(".barChrono");
+      if(fill) fill.style.width = Math.round((1 - b.buildTimeRemaining/b.buildTimeTotal)*100) + "%";
+      if(chrono) chrono.textContent = b.buildTimeRemaining + "s";
+    } else if(ALT_GATHER[key] && b.level > 0){
+      const el = document.querySelector(`.marker[data-building-key="${key}"]`);
+      if(!el) continue;
+      const count = el.querySelector(".siteControls span");
+      if(count) count.textContent = b.assigned || 0;
+    }
+  }
+
   renderTopbar();
   renderVillagePanel();
+  renderRecruitPanel();
+  renderUpgradesPanel();
 }

@@ -19,7 +19,9 @@ function freshState(){
   const s = {
     tick:0, day:1, seasonIdx:0, speed:1,
     resources: { bois:0, pierre:0, nourriture:0, or:0 },
-    population: START_POPULATION,
+    population: START_POPULATION,   // habitants actifs (assignables)
+    populationReserve: 0,           // habitants en réserve (Maison), à recruter contre nourriture
+    recruitedCount: 0,              // nb déjà recrutés au-delà des survivants initiaux (pour le coût croissant)
     seed,
     decor: generateDecor(rand),
     researchSites: [],
@@ -27,9 +29,9 @@ function freshState(){
     buildingPositions: {},
     villageFounded: false,
     menuBuildings: {},
+    upgrades: { bois:0, pierre:0, or:0, nourriture:0 },
     selected: null, // {kind:'site', type} | {kind:'storage'} | {kind:'menuBuilding', key}
   };
-  for(const key of Object.keys(MENU_BUILDINGS)) s.menuBuildings[key] = { level:0 };
 
   const lake = s.decor.lake;
   const WATER_MARGIN = 45; // distance mini au bord de l'eau pour un emplacement "terrestre"
@@ -88,13 +90,24 @@ function freshState(){
       assigned: 0,
       discovered: false,
       launched: false, // tant que non lancée, seul un bouton "Lancer la recherche" est visible
-      locked: type !== "nourriture", // seule la recherche de nourriture est visible au départ
+      // La pierre se débloque à la fondation du Village, pas avec la nourriture.
+      locked: RESEARCH_TYPES[type].unlockedByVillage ? true : (type !== "nourriture"),
     });
   }
   const storagePos = pickSpot();
   s.storage = { x:storagePos.x, y:storagePos.y };
 
   for(const key of Object.keys(MENU_BUILDINGS)){
+    s.menuBuildings[key] = { level:0, building:false, buildTimeRemaining:0, buildTimeTotal:0 };
+    if(ALT_GATHER[key]) s.menuBuildings[key].assigned = 0;
+  }
+
+  // Le "townhall" du menu se construit exactement à l'emplacement révélé
+  // par la recherche "hotelville" — jamais à une position indépendante.
+  const hdvSite = s.researchSites.find(x=>x.type==="hotelville");
+  s.buildingPositions.townhall = { x:hdvSite.x, y:hdvSite.y };
+  for(const key of Object.keys(MENU_BUILDINGS)){
+    if(key === "townhall") continue;
     s.buildingPositions[key] = key === "fishcabin" ? pickSpotOnWater() : pickSpot();
   }
 

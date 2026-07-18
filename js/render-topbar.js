@@ -87,6 +87,11 @@ function showResourceTooltip(anchorEl, resKey, label){
   tooltipEl = document.createElement("div");
   tooltipEl.className = "menuTooltip";
   let html = `<div class="ttTitle">${iconFor(resKey)} ${label}</div>`;
+  if(resKey !== "or"){
+    const cap = storageCapFor(state, resKey);
+    const have = Math.floor(state.resources[resKey]||0);
+    html += `<div class="reqLine"><span>Stock</span><span>${have}/${cap}</span></div>`;
+  }
   if(siteProducers.length===0 && altProducers.length===0){
     html += `<div class="ttSub">Aucune production active actuellement.</div>`;
   } else {

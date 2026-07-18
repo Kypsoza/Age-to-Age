@@ -30,6 +30,7 @@ function freshState(){
     villageFounded: false,
     menuBuildings: {},
     upgrades: { bois:0, pierre:0, or:0, nourriture:0 },
+    storageTiers: { bois:0, pierre:0, nourriture:0 },
     selected: null, // {kind:'site', type} | {kind:'storage'} | {kind:'menuBuilding', key}
   };
 

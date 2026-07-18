@@ -141,9 +141,26 @@ function renderInfoPanel(){
   }
 
   if(sel.kind==='storage'){
-    panel.innerHTML = `<div><b>📦 Entrepôt</b></div>
-      <div style="margin-top:6px;">Le stockage que la tribu a déposé à son arrivée. Il peut contenir toutes les ressources.</div>
-      <div style="margin-top:10px;color:var(--bone-dim);font-size:11px;">L'amélioration de sa capacité sera disponible une fois les premières ressources collectées.</div>`;
+    let html = `<div><b>📦 Entrepôt</b></div>
+      <div style="margin-top:6px;">Le stockage que la tribu a déposé à son arrivée. La capacité de chaque ressource s'améliore indépendamment.</div>`;
+    for(const resKey of STORABLE_RESOURCES){
+      const status = getStorageStatus(state, resKey);
+      const have = Math.floor(state.resources[resKey]||0);
+      html += `<div class="upgradeRow">
+        <div class="upgradeRowHead">
+          <span>${iconFor(resKey)} ${resKey[0].toUpperCase()+resKey.slice(1)}</span>
+          <span class="upgradeTierBadge">${have}/${status.cap}</span>
+        </div>`;
+      for(const l of status.lines){
+        html += `<div class="reqLine ${l.ok?'ok':'bad'}">${l.label}</div>`;
+      }
+      html += `<button class="foundBtn upgradeBuyBtn" data-storage-res="${resKey}">Agrandir → ${status.nextCap}</button>
+      </div>`;
+    }
+    panel.innerHTML = html;
+    panel.querySelectorAll("[data-storage-res]").forEach(btn=>{
+      btn.onclick = ()=>{ buyStorageTier(state, btn.dataset.storageRes); renderAll(); };
+    });
     return;
   }
 

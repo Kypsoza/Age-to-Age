@@ -7,7 +7,7 @@ const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
 const NIGHT_START_RATIO = 0.62;
-const SAVE_KEY = "age2age_save_phase1_v4";
+const SAVE_KEY = "age2age_save_phase1_v5";
 const AUTOSAVE_MS = 120000;
 
 const SEASONS = [
@@ -65,6 +65,14 @@ const ALT_GATHER = {
   huntlodge: { resource:"nourriture", rateMult:1.5 },
   fishcabin: { resource:"nourriture", rateMult:2.0 },
 };
+
+// Entrepôt : plafond de stockage indépendant par ressource. L'Or reste sans
+// limite (monnaie virtuelle et sans poids, cf. cahier des charges).
+const STORAGE_CAP_BASE = 80;
+const STORAGE_CAP_PER_TIER = 60;
+const STORAGE_TIER_COST_BASE = { bois:{bois:10,pierre:10}, pierre:{bois:15,or:5}, nourriture:{bois:10,pierre:5} };
+const STORAGE_TIER_COST_MULTIPLIER = 1.5;
+const STORABLE_RESOURCES = ["bois","pierre","nourriture"];
 
 const VILLAGE_COST = { bois:30, or:15 };
 

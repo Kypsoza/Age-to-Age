@@ -29,6 +29,18 @@ function gatherCapFor(s){
   return GATHER_CAP_BASE + s.menuBuildings.townhall.level * GATHER_CAP_PER_HDV_LEVEL;
 }
 
+// Plafond de stockage pour une ressource : illimité pour l'or (monnaie
+// virtuelle sans poids), plafonné et améliorable indépendamment pour le reste.
+function storageCapFor(s, resKey){
+  if(resKey === "or") return Infinity;
+  return STORAGE_CAP_BASE + (s.storageTiers[resKey]||0) * STORAGE_CAP_PER_TIER;
+}
+
+function addResource(s, resKey, amount){
+  const cap = storageCapFor(s, resKey);
+  s.resources[resKey] = Math.min(cap, (s.resources[resKey]||0) + amount);
+}
+
 function assignToSite(s, site, delta){
   if(site.locked) return;
 
@@ -110,7 +122,7 @@ function simTick(s){
     // Récolte manuelle sur zone découverte
     if(site.type !== "hotelville" && site.assigned > 0){
       const mult = 1 + (s.upgrades[site.type]||0);
-      s.resources[site.type] = (s.resources[site.type]||0) + site.assigned * GATHER_RATE * mult;
+      addResource(s, site.type, site.assigned * GATHER_RATE * mult);
     }
   }
 
@@ -119,7 +131,7 @@ function simTick(s){
     const b = s.menuBuildings[key];
     if(b.level > 0 && b.assigned > 0){
       const mult = 1 + (s.upgrades[cfg.resource]||0);
-      s.resources[cfg.resource] = (s.resources[cfg.resource]||0) + b.assigned * GATHER_RATE * cfg.rateMult * mult;
+      addResource(s, cfg.resource, b.assigned * GATHER_RATE * cfg.rateMult * mult);
     }
   }
 
@@ -310,4 +322,36 @@ function buyUpgrade(s, resKey){
   for(const [res,amt] of Object.entries(cost)) s.resources[res] -= amt;
   s.upgrades[resKey]++;
   toast(`${def.label} : palier ${s.upgrades[resKey]} débloqué (+100% income, +${s.upgrades[resKey]*100}% cumulé).`);
+}
+
+// ---------------------------------------------------------------------
+// ENTREPÔT — paliers de plafond de stockage, indépendants par ressource
+// ---------------------------------------------------------------------
+function costForStorageTier(resKey, currentTier){
+  const base = STORAGE_TIER_COST_BASE[resKey];
+  const mult = Math.pow(STORAGE_TIER_COST_MULTIPLIER, currentTier);
+  const scaled = {};
+  for(const [res,amt] of Object.entries(base)) scaled[res] = Math.ceil(amt*mult);
+  return scaled;
+}
+
+function getStorageStatus(s, resKey){
+  const currentTier = s.storageTiers[resKey]||0;
+  const cap = storageCapFor(s, resKey);
+  const cost = costForStorageTier(resKey, currentTier);
+  const lines = [];
+  for(const [res,amt] of Object.entries(cost)){
+    const have = Math.floor(s.resources[res]||0);
+    lines.push({label:`${iconFor(res)} ${have}/${amt}`, ok: have >= amt});
+  }
+  return { currentTier, cap, nextCap: cap + STORAGE_CAP_PER_TIER, lines };
+}
+
+function buyStorageTier(s, resKey){
+  const status = getStorageStatus(s, resKey);
+  if(!status.lines.every(l=>l.ok)){ toast("Ressources insuffisantes."); return; }
+  const cost = costForStorageTier(resKey, status.currentTier);
+  for(const [res,amt] of Object.entries(cost)) s.resources[res] -= amt;
+  s.storageTiers[resKey]++;
+  toast(`Entrepôt : plafond ${iconFor(resKey)} porté à ${storageCapFor(s,resKey)}.`);
 }

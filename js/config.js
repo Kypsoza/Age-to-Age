@@ -7,7 +7,7 @@ const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
 const NIGHT_START_RATIO = 0.62;
-const SAVE_KEY = "age2age_save_phase1";
+const SAVE_KEY = "age2age_save_phase1_v3";
 const AUTOSAVE_MS = 120000;
 
 const SEASONS = [

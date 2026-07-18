@@ -16,13 +16,13 @@ function startLoop(){
 // =====================================================================
 function init(){
   const existing = loadGame();
-  state = (existing && existing.researchSites && existing.decor) ? existing : freshState();
+  const compatible = existing && existing.researchSites && existing.decor
+    && existing.menuBuildings && existing.buildingPositions && existing.storage;
+  state = compatible ? existing : freshState();
 
-  renderMapBackground();
-  renderAll();
-  setupResourceTooltips();
-  startLoop();
-
+  // Les boutons sont branchés AVANT le premier rendu : si jamais le rendu
+  // plante (ex: sauvegarde incompatible), les contrôles restent utilisables
+  // (notamment "Nouvelle partie") au lieu de rester figés.
   document.getElementById("btnSave").onclick = ()=> saveGame(false);
   document.getElementById("btnExport").onclick = exportGame;
   document.getElementById("btnImport").onclick = ()=> document.getElementById("fileImport").click();
@@ -56,6 +56,11 @@ function init(){
       btn.classList.add("active");
     };
   });
+
+  renderMapBackground();
+  renderAll();
+  setupResourceTooltips();
+  startLoop();
 
   setInterval(()=> saveGame(true), AUTOSAVE_MS);
   window.addEventListener("beforeunload", ()=> saveGame(true));

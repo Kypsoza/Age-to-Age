@@ -17,11 +17,15 @@ function renderBuildBar(){
     const status = getMenuBuildStatus(state, key);
 
     const item = document.createElement("div");
-    item.className = "menuItem" + (status.locked ? " locked" : "") + (status.maxed ? " maxed" : "");
+    const unaffordable = !status.locked && !status.maxed && !status.lines.every(l=>l.ok);
+    item.className = "menuItem"
+      + (status.locked ? " locked" : "")
+      + (status.maxed ? " maxed" : "")
+      + (unaffordable ? " unaffordable" : "");
     item.innerHTML = `
       <span class="ic">${status.locked ? "🔒" : def.icon}</span>
       <span>${def.name}</span>
-      <span class="lvl">${b.level>0 ? "Niv. "+b.level+(def.maxLevel?"/"+def.maxLevel:"") : (status.locked ? "Verrouillé" : "Non construit")}</span>
+      <span class="lvl">${b.level>0 ? "Niv. "+b.level+(def.maxLevel?"/"+def.maxLevel:"") : (status.locked ? "Verrouillé" : (unaffordable ? "Ressources insuffisantes" : "Non construit"))}</span>
     `;
     item.onclick = ()=>{
       if(status.locked){ toast("Prérequis non remplis — regarde le cadenas."); return; }

@@ -1,8 +1,8 @@
 // =====================================================================
 // CONFIG — PHASE 1 : Genèse, Recherche & Découverte
 // =====================================================================
-const MAP_W = 900, MAP_H = 560; // dimensions de la carte en pixels (plus de grille)
-const MARKER_MIN_DIST = 130;    // distance mini entre deux marqueurs (px)
+const MAP_W = 1100, MAP_H = 680; // dimensions de la carte en pixels (plus de grille)
+const MARKER_MIN_DIST = 150;    // distance mini entre deux marqueurs (px)
 const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
@@ -39,8 +39,10 @@ const TERRAIN_LABELS = {
 // Récolte manuelle sur une zone découverte (avant que le vrai bâtiment
 // collecteur n'existe — Phase 4). Rendement modeste et volontairement lent.
 const GATHER_RATE = 0.4;      // ressource / tick / habitant assigné
-const GATHER_CAP = 3;         // nombre max d'habitants assignables par zone
+const GATHER_CAP_BASE = 3;    // plafond par zone avant que l'Hôtel de Ville existe
+const GATHER_CAP_PER_HDV_LEVEL = 5; // bonus de plafond par niveau d'Hôtel de Ville
 const FOOD_CONSUMPTION = 0.12; // nourriture / tick / habitant, uniquement si la zone nourriture a du monde assigné ce tick
+const LEVEL_COST_MULTIPLIER = 1.6; // multiplicateur de coût par niveau pour les bâtiments à niveaux illimités
 
 const VILLAGE_COST = { bois:30, or:15 };
 
@@ -49,8 +51,8 @@ const VILLAGE_COST = { bois:30, or:15 };
 // "requiresLevel" force un niveau minimum sur l'un d'entre eux ;
 // "requiresAny" signifie qu'un seul des "requires" suffit (au lieu de tous).
 const MENU_BUILDINGS = {
-  townhall: { name:"Hôtel de Ville", icon:"🏛️", cost:{bois:25,or:10}, requires:[], maxLevel:1,
-    desc:"Le cœur de la tribu. Débloque tous les autres bâtiments." },
+  townhall: { name:"Hôtel de Ville", icon:"🏛️", cost:{bois:25,or:10}, requires:[], maxLevel:null,
+    desc:"Le cœur de la tribu. Débloque tous les autres bâtiments. Chaque niveau augmente de "+GATHER_CAP_PER_HDV_LEVEL+" le plafond d'habitants assignables par zone/bâtiment." },
   house: { name:"Maison", icon:"🏠", cost:{bois:15}, requires:["townhall"], maxLevel:null,
     desc:"+5 habitants par niveau, niveaux illimités (effet complet en Phase 5)." },
   forge: { name:"Forge", icon:"⚒️", cost:{bois:20,or:10}, requires:["townhall"], maxLevel:1,

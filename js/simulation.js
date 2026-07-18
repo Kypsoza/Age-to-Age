@@ -22,6 +22,10 @@ function launchResearch(s, site){
   toast(`Recherche lancée : ${def.label}. Assigne des habitants pour avancer.`);
 }
 
+function gatherCapFor(s){
+  return GATHER_CAP_BASE + s.menuBuildings.townhall.level * GATHER_CAP_PER_HDV_LEVEL;
+}
+
 function assignToSite(s, site, delta){
   if(site.locked) return;
 
@@ -38,8 +42,9 @@ function assignToSite(s, site, delta){
   }
 
   if(site.type === "hotelville") return; // pas de récolte sur l'emplacement de l'Hôtel de Ville
+  const cap = gatherCapFor(s);
   if(delta > 0){
-    if(site.assigned >= GATHER_CAP){ toast(`Cap atteint : max ${GATHER_CAP} habitants sur cette zone.`); return; }
+    if(site.assigned >= cap){ toast(`Plafond atteint : max ${cap} habitants sur cette zone (améliore l'Hôtel de Ville pour l'augmenter).`); return; }
     if(getFreePopulation(s) <= 0){ toast("Aucun habitant disponible."); return; }
   } else {
     if(site.assigned <= 0) return;
@@ -95,6 +100,20 @@ function simTick(s){
   }
 }
 
+// Revenu net (production - consommation) par ressource, pour le topbar.
+function getResourceIncome(s, resKey){
+  let prod = 0;
+  for(const site of s.researchSites){
+    if(site.type===resKey && site.discovered && site.assigned>0) prod += site.assigned*GATHER_RATE;
+  }
+  let cons = 0;
+  if(resKey==="nourriture"){
+    const foodSite = siteByType(s,"nourriture");
+    if(foodSite && foodSite.discovered && foodSite.assigned>0) cons = s.population*FOOD_CONSUMPTION;
+  }
+  return { prod, cons, net: prod-cons };
+}
+
 // ---------------------------------------------------------------------
 // VILLAGE & BÂTIMENTS DU MENU
 // ---------------------------------------------------------------------
@@ -108,6 +127,16 @@ function foundVillage(s){
   for(const [res,amt] of Object.entries(VILLAGE_COST)) s.resources[res] -= amt;
   s.villageFounded = true;
   toast("Le Village est fondé ! Le menu de construction est disponible.");
+}
+
+// Coût mis à l'échelle par niveau pour les bâtiments à niveaux illimités
+// (townhall, house) : chaque niveau coûte LEVEL_COST_MULTIPLIER fois plus.
+function costForLevel(def, currentLevel){
+  if(def.maxLevel !== null) return def.cost;
+  const mult = Math.pow(LEVEL_COST_MULTIPLIER, currentLevel);
+  const scaled = {};
+  for(const [res,amt] of Object.entries(def.cost)) scaled[res] = Math.ceil(amt*mult);
+  return scaled;
 }
 
 // Retourne {locked, lines} — lines = [{label, ok}] pour le coût + les
@@ -133,14 +162,16 @@ function getMenuBuildStatus(s, key){
     }
   }
 
-  if(!locked){
-    for(const [res,amt] of Object.entries(def.cost)){
+  const maxed = def.maxLevel!==null && b.level>=def.maxLevel;
+  if(!locked && !maxed){
+    const cost = costForLevel(def, b.level);
+    for(const [res,amt] of Object.entries(cost)){
       const have = Math.floor(s.resources[res]||0);
       lines.push({label:`${iconFor(res)} ${have}/${amt}`, ok: have >= amt});
     }
   }
 
-  return { locked, maxed: def.maxLevel!==null && b.level>=def.maxLevel, lines };
+  return { locked, maxed, lines };
 }
 
 function buildMenuBuilding(s, key){
@@ -151,7 +182,8 @@ function buildMenuBuilding(s, key){
   if(status.locked){ toast("Prérequis non remplis pour ce bâtiment."); return; }
   if(status.maxed){ toast("Niveau maximum atteint."); return; }
   if(!status.lines.every(l=>l.ok)){ toast("Ressources insuffisantes."); return; }
-  for(const [res,amt] of Object.entries(def.cost)) s.resources[res] -= amt;
+  const cost = costForLevel(def, b.level);
+  for(const [res,amt] of Object.entries(cost)) s.resources[res] -= amt;
   b.level++;
   toast(b.level===1 ? `${def.name} construit(e).` : `${def.name} amélioré(e) au niveau ${b.level}.`);
 }

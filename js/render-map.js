@@ -269,6 +269,7 @@ function updateTickVisuals(){
     renderVillagePanel();
     renderRecruitPanel();
     renderUpgradesPanel();
+    renderBuildBar();
     return;
   }
 

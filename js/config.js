@@ -1,8 +1,8 @@
 // =====================================================================
 // CONFIG — PHASE 1 : Genèse, Recherche & Découverte
 // =====================================================================
-const GRID_W = 17, GRID_H = 11;
-const TILE_PX = 42;
+const MAP_W = 900, MAP_H = 560; // dimensions de la carte en pixels (plus de grille)
+const MARKER_MIN_DIST = 130;    // distance mini entre deux marqueurs (px)
 const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
@@ -33,5 +33,5 @@ const RESEARCH_TYPES = {
 };
 
 const TERRAIN_LABELS = {
-  grass:"Herbe", forest:"Broussailles", stoneDeposit:"Terrain rocheux", fertile:"Terre meuble"
+  grass:"Herbe", forest:"Forêt", stoneDeposit:"Formation rocheuse", water:"Étendue d'eau"
 };

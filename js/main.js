@@ -16,9 +16,9 @@ function startLoop(){
 // =====================================================================
 function init(){
   const existing = loadGame();
-  state = (existing && existing.researchSites) ? existing : freshState();
+  state = (existing && existing.researchSites && existing.decor) ? existing : freshState();
 
-  buildGridDOM();
+  renderMapBackground();
   renderAll();
   startLoop();
 
@@ -35,6 +35,7 @@ function init(){
       state = freshState();
       localStorage.removeItem(SAVE_KEY);
       saveGame(true);
+      renderMapBackground();
       renderAll();
       toast("Nouvelle partie démarrée.");
       btn.textContent = "🗑️ Nouvelle partie";

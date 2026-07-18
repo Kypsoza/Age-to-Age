@@ -14,14 +14,14 @@ function renderInfoPanel(){
   }
 
   if(sel.kind==='tile'){
-    const t = getTile(state, sel.x, sel.y);
-    panel.innerHTML = `<div><b>${TERRAIN_LABELS[t.terrain]}</b></div>
-      <div style="color:var(--bone-dim);font-family:var(--font-mono);font-size:10.5px;margin-top:4px;">Case (${t.x},${t.y})</div>`;
+    // conservé pour compatibilité mais plus jamais déclenché : la carte
+    // procédurale n'a plus de cases cliquables, seuls les marqueurs le sont.
+    panel.innerHTML = "";
     return;
   }
 
   // site
-  const site = state.researchSites.find(s2=>s2.type===sel.type);
+  const site = siteByType(state, sel.type);
   const def = RESEARCH_TYPES[site.type];
   let html = `<div><b>${site.discovered ? def.revealedIcon : def.icon} ${def.label}</b></div>
     <div style="margin-top:6px;">${def.desc}</div>`;

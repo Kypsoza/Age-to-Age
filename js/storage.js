@@ -26,8 +26,9 @@ function importGame(file){
   reader.onload = (e)=>{
     try{
       const data = JSON.parse(e.target.result);
-      if(!data.tiles || !data.researchSites || !data.storage) throw new Error("Structure invalide.");
+      if(!data.researchSites || !data.storage || !data.decor) throw new Error("Structure invalide.");
       state = data;
+      renderMapBackground();
       renderAll();
       toast("Sauvegarde importée avec succès.");
     }catch(err){

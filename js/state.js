@@ -1,51 +1,41 @@
 // =====================================================================
-// STATE — génération de la partie fraîche
+// STATE — génération de la partie fraîche (carte procédurale organique)
 // =====================================================================
 let state = null;
 
-function pseudoRand(x,y,seed){
-  const v = Math.sin(x*127.1 + y*311.7 + seed*74.7) * 43758.5453;
-  return v - Math.floor(v);
+function mulberry32(seed){
+  return function(){
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
 }
 
 function freshState(){
-  const seed = Math.random()*1000;
+  const seed = Math.floor(Math.random()*1e9);
+  const rand = mulberry32(seed);
+
   const s = {
     tick:0, day:1, seasonIdx:0, speed:1,
     resources: { bois:0, pierre:0, nourriture:0, or:0 },
     population: START_POPULATION,
-    tiles: [],
+    seed,
+    decor: generateDecor(rand),
     researchSites: [],
     storage: null,
-    selected: null, // {kind:'site', index} | {kind:'storage'} | {kind:'tile', x, y}
+    selected: null, // {kind:'site', type} | {kind:'storage'}
   };
 
-  // Terrain décoratif (aucun effet fonctionnel en Phase 1)
-  for(let y=0;y<GRID_H;y++){
-    for(let x=0;x<GRID_W;x++){
-      let terrain = "grass";
-      const r = pseudoRand(x,y,seed);
-      if(r < 0.12) terrain = "forest";
-      else if(r < 0.18) terrain = "stoneDeposit";
-      else if(r < 0.26) terrain = "fertile";
-      s.tiles.push({x,y,terrain});
-    }
-  }
-
-  // Placement aléatoire des 5 marqueurs (4 recherches + entrepôt), avec
-  // une distance minimale entre eux pour rester lisibles sur la carte.
-  const MIN_DIST = 3;
   const taken = [];
   function pickSpot(){
-    for(let attempt=0; attempt<400; attempt++){
-      const x = 1 + Math.floor(Math.random()*(GRID_W-2));
-      const y = 1 + Math.floor(Math.random()*(GRID_H-2));
-      const ok = taken.every(p => Math.abs(p.x-x)+Math.abs(p.y-y) >= MIN_DIST);
+    for(let attempt=0; attempt<500; attempt++){
+      const x = 60 + rand()*(MAP_W-120);
+      const y = 60 + rand()*(MAP_H-120);
+      const ok = taken.every(p => Math.hypot(p.x-x, p.y-y) >= MARKER_MIN_DIST);
       if(ok){ taken.push({x,y}); return {x,y}; }
     }
-    // fallback si jamais on n'a pas trouvé (grille trop petite) : position libre quelconque
-    const x = 1 + Math.floor(Math.random()*(GRID_W-2));
-    const y = 1 + Math.floor(Math.random()*(GRID_H-2));
+    const x = 60 + rand()*(MAP_W-120), y = 60 + rand()*(MAP_H-120);
     taken.push({x,y});
     return {x,y};
   }
@@ -66,11 +56,40 @@ function freshState(){
   return s;
 }
 
-function getTile(s,x,y){
-  if(x<0||y<0||x>=GRID_W||y>=GRID_H) return null;
-  return s.tiles[y*GRID_W+x];
+// Génère les éléments décoratifs de la carte : un lac sur un bord aléatoire,
+// des clusters de forêt et des formations rocheuses, tous en coordonnées
+// pixel continues (aucune grille). Purement visuel en Phase 1.
+function generateDecor(rand){
+  const side = Math.floor(rand()*4); // 0=haut 1=droite 2=bas 3=gauche
+  const lakeCenter = [
+    {x: MAP_W*(0.3+rand()*0.4), y: -30},
+    {x: MAP_W+30, y: MAP_H*(0.3+rand()*0.4)},
+    {x: MAP_W*(0.3+rand()*0.4), y: MAP_H+30},
+    {x: -30, y: MAP_H*(0.3+rand()*0.4)},
+  ][side];
+  const lake = { cx:lakeCenter.x, cy:lakeCenter.y, r: 140+rand()*60, seedOffset: rand()*1000 };
+
+  const forests = [];
+  const nForests = 5 + Math.floor(rand()*3);
+  for(let i=0;i<nForests;i++){
+    forests.push({
+      cx: 40+rand()*(MAP_W-80), cy: 40+rand()*(MAP_H-80),
+      r: 35+rand()*35, seedOffset: rand()*1000,
+    });
+  }
+
+  const rocks = [];
+  const nRocks = 3 + Math.floor(rand()*3);
+  for(let i=0;i<nRocks;i++){
+    rocks.push({
+      cx: 40+rand()*(MAP_W-80), cy: 40+rand()*(MAP_H-80),
+      r: 22+rand()*20, seedOffset: rand()*1000,
+    });
+  }
+
+  return { lake, forests, rocks };
 }
 
-function siteAt(s,x,y){
-  return s.researchSites.find(site => site.x===x && site.y===y) || null;
+function siteByType(s, type){
+  return s.researchSites.find(site => site.type===type) || null;
 }

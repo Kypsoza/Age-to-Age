@@ -53,37 +53,46 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg-deep);color:var(--b
 main{flex:1;display:flex;overflow:hidden;}
 
 #mapWrap{flex:1;position:relative;overflow:auto;background:#0e120f;
-  background-image:radial-gradient(circle at 50% 0%,#1c231b 0%,#0e120f 70%);
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;padding:24px;
 }
-#grid{
-  display:grid;position:relative;
-  box-shadow:0 0 0 3px var(--line),0 10px 40px rgba(0,0,0,.5);
+#mapCanvas{
+  position:relative;width:900px;height:560px;flex-shrink:0;
+  box-shadow:0 0 0 3px var(--line),0 10px 40px rgba(0,0,0,.6);
+  border-radius:4px;overflow:hidden;
 }
-.tile{
-  position:relative;display:flex;align-items:center;justify-content:center;
-  border:1px solid rgba(0,0,0,.25);cursor:pointer;font-size:15px;user-select:none;
-  transition:filter .1s;
-}
-.tile:hover{filter:brightness(1.25);}
-.tile.grass{background:#33422a;}
-.tile.forest{background:#2c3a24;}
-.tile.stoneDeposit{background:#3a3a36;}
-.tile.fertile{background:#41451f;}
-.tile .buildingIcon{font-size:19px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
-.tile.night-shade::after{content:'';position:absolute;inset:0;background:rgba(10,15,25,var(--night-op,0));pointer-events:none;}
-.tile.pendingSite{outline:1px dashed var(--ember-bright);outline-offset:-3px;}
-.tile.discoveredSite{outline:1px dashed var(--moss-bright);outline-offset:-3px;}
-.tile.storageMarker{outline:1px solid var(--bone-dim);outline-offset:-3px;}
+#mapSvg{position:absolute;inset:0;pointer-events:none;user-select:none;}
+#nightVeil{position:absolute;inset:0;background:rgba(10,15,25,var(--night-op,0));pointer-events:none;transition:background .3s;}
+#markerLayer{position:absolute;inset:0;pointer-events:none;}
 
-.barWrap{position:absolute;bottom:2px;left:2px;right:2px;height:10px;background:rgba(0,0,0,.5);border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.barFill{position:absolute;left:0;top:0;bottom:0;background:var(--ember);opacity:.55;}
-.barChrono{position:relative;z-index:1;font-family:var(--font-mono);font-size:7.5px;color:var(--bone);line-height:1;}
+/* Chaque marqueur est un bloc autonome (icône + barre + contrôles dans le
+   même flux normal) : plus aucun élément ne déborde sur un voisin, donc
+   plus aucun conflit de survol/clic possible. */
+.marker{
+  position:absolute;transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  pointer-events:auto;cursor:pointer;padding:4px;
+}
+.markerIcon{
+  font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.7));
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  background:rgba(22,26,23,.55);border-radius:50%;border:2px solid transparent;
+  transition:border-color .15s,background .15s;
+}
+.marker.pendingSite .markerIcon{border-color:var(--ember-bright);}
+.marker.discoveredSite .markerIcon{border-color:var(--moss-bright);background:rgba(22,26,23,.25);}
+.marker.storageMarker .markerIcon{border-color:var(--bone-dim);}
+.marker:hover .markerIcon{background:rgba(22,26,23,.8);}
+
+.barWrap{
+  position:relative;width:56px;height:12px;background:rgba(0,0,0,.55);border-radius:4px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;border:1px solid var(--line);
+}
+.barFill{position:absolute;left:0;top:0;bottom:0;background:var(--ember);opacity:.6;}
+.barChrono{position:relative;z-index:1;font-family:var(--font-mono);font-size:8.5px;color:var(--bone);line-height:1;}
 
 .siteControls{
-  position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:6px;background:rgba(22,26,23,.95);border:1px solid var(--line);
-  border-radius:13px;padding:3px 6px;z-index:7;white-space:nowrap;
+  border-radius:13px;padding:3px 6px;white-space:nowrap;
 }
 .siteControls button{
   width:22px;height:22px;border-radius:50%;border:none;background:var(--bg-panel-2);color:var(--bone);

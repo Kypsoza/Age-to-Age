@@ -14,7 +14,7 @@ Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, am
 - **Bâtiments** (menu du bas, dépendances) : Hôtel de Ville (premier, débloque tout) → Maison + Forge → Pavillon de Chasse / Salle du Trésor → Cabane de Pêche → Moulin, et Maison niv.2 → Caserne. Construction chronométrée (18s + 9s/niveau), tous les coûts mélangent Bois+Pierre+Or (×1,9/niveau) pour forcer une répartition stratégique des habitants entre les zones de récolte.
 - **Pavillon de Chasse / Cabane de Pêche** : deviennent de vrais points de récolte de nourriture sur la carte (×1,5 et ×2 le rendement de base).
 - **Forge / Moulin / Salle du Trésor** : chaque niveau débloque un palier d'amélioration d'income (+100% cumulatif) sur Bois+Pierre / Nourriture / Or respectivement, achetable indépendamment — le coût d'un palier porte toujours sur les *autres* ressources que celle boostée.
-- **Entrepôt** : plafond de stockage indépendant par ressource (Bois/Pierre/Nourriture, 80 de base +60/palier, coût mixé ×1,7/palier), améliorable séparément. L'Or reste illimité (monnaie virtuelle).
+- **Entrepôt** : plafond de stockage indépendant par ressource — **Bois, Pierre, Nourriture et Or** — paliers de 1000 (1000 → 2000 → 3000...), coût mixé ×1,7/palier, améliorable séparément pour chaque ressource.
 - **Population** : la Maison ajoute des places en réserve (+5/niveau), pas des habitants actifs. Le recrutement (bouton dédié) coûte de la nourriture, coût croissant (×1,4/recrutement). Tous les habitants actifs consomment de la nourriture en permanence, qu'ils travaillent ou non.
 - **Cycle temporel** : jours/saisons, cycle jour/nuit présent en interne mais voile visuel désactivé pour l'instant.
 
@@ -32,6 +32,16 @@ Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, am
 ---
 
 ## 🗂️ Historique des versions
+
+### v0.8 — Stockage de l'or, paliers agrandis, panneau dynamique
+**Ajouts**
+- L'Or a maintenant lui aussi un plafond de stockage améliorable (coût en bois+pierre), il n'est plus illimité
+
+**Améliorations**
+- Paliers d'Entrepôt fortement agrandis : 1000 → 2000 → 3000 → 4000... (au lieu de 80 → 140 → 200...), sur toutes les ressources dont l'Or
+
+**Corrections**
+- Panneau de droite (PC) et fiche du bas (mobile) : les prérequis (have/need) restaient figés tant qu'on ne cliquait pas ailleurs, même en gardant le panneau ouvert pendant que les ressources évoluaient. Ils se rafraîchissent maintenant en continu, comme le reste de l'interface.
 
 ### v0.7 — Équilibrage stratégique & tooltips
 **Améliorations**

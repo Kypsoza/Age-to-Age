@@ -29,10 +29,9 @@ function gatherCapFor(s){
   return GATHER_CAP_BASE + s.menuBuildings.townhall.level * GATHER_CAP_PER_HDV_LEVEL;
 }
 
-// Plafond de stockage pour une ressource : illimité pour l'or (monnaie
-// virtuelle sans poids), plafonné et améliorable indépendamment pour le reste.
+// Plafond de stockage pour une ressource : indépendant et améliorable pour
+// toutes, Or compris.
 function storageCapFor(s, resKey){
-  if(resKey === "or") return Infinity;
   return STORAGE_CAP_BASE + (s.storageTiers[resKey]||0) * STORAGE_CAP_PER_TIER;
 }
 

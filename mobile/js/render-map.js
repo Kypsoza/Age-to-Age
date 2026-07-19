@@ -220,6 +220,7 @@ function updateTickVisuals(){
     renderBuildScreen();
     renderUpgradesScreen();
     renderPopScreen();
+    refreshOpenSheet();
     return;
   }
   for(const site of state.researchSites){
@@ -249,4 +250,5 @@ function updateTickVisuals(){
     }
   }
   renderTopStrip();
+  refreshOpenSheet();
 }

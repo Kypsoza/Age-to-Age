@@ -66,15 +66,16 @@ const ALT_GATHER = {
 
 // Entrepôt : plafond de stockage indépendant par ressource. L'Or reste sans
 // limite (monnaie virtuelle et sans poids, cf. cahier des charges).
-const STORAGE_CAP_BASE = 80;
-const STORAGE_CAP_PER_TIER = 60;
+const STORAGE_CAP_BASE = 1000;
+const STORAGE_CAP_PER_TIER = 1000;
 const STORAGE_TIER_COST_BASE = {
   bois:{pierre:12,or:8},
   pierre:{bois:15,or:10},
   nourriture:{bois:10,pierre:8,or:6},
+  or:{bois:15,pierre:15},
 };
 const STORAGE_TIER_COST_MULTIPLIER = 1.7;
-const STORABLE_RESOURCES = ["bois","pierre","nourriture"];
+const STORABLE_RESOURCES = ["bois","pierre","nourriture","or"];
 
 const VILLAGE_COST = { bois:30, or:15 };
 

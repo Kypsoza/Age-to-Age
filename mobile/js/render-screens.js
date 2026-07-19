@@ -37,6 +37,8 @@ function renderTopStrip(){
 // =====================================================================
 // BOTTOM SHEET — détails contextuels (site, entrepôt, bâtiment)
 // =====================================================================
+let currentSheet = null; // {kind:'site'|'storage'|'building', key}
+
 function openSheet(html){
   document.getElementById("sheetContent").innerHTML = html;
   document.getElementById("sheetOverlay").classList.add("show");
@@ -45,9 +47,18 @@ function openSheet(html){
 function closeSheet(){
   document.getElementById("sheetOverlay").classList.remove("show");
   document.getElementById("bottomSheet").classList.remove("show");
+  currentSheet = null;
+}
+
+function refreshOpenSheet(){
+  if(!currentSheet) return;
+  if(currentSheet.kind === "site") openSiteSheet(currentSheet.key);
+  else if(currentSheet.kind === "storage") openStorageSheet();
+  else if(currentSheet.kind === "building") openBuildingSheet(currentSheet.key);
 }
 
 function openSiteSheet(type){
+  currentSheet = {kind:"site", key:type};
   const site = siteByType(state, type);
   const def = RESEARCH_TYPES[type];
   let html = `<h3>${site.discovered?def.revealedIcon:def.icon} ${def.label}</h3><p style="color:var(--bone-dim);font-size:13px;">${def.desc}</p>`;
@@ -82,6 +93,7 @@ function openSiteSheet(type){
 }
 
 function openStorageSheet(){
+  currentSheet = {kind:"storage"};
   let html = `<h3>📦 Entrepôt</h3><p style="color:var(--bone-dim);font-size:13px;">Capacité de stockage améliorable indépendamment par ressource.</p>`;
   for(const resKey of STORABLE_RESOURCES){
     const status = getStorageStatus(state, resKey);
@@ -99,6 +111,7 @@ function openStorageSheet(){
 }
 
 function openBuildingSheet(key){
+  currentSheet = {kind:"building", key};
   const def = MENU_BUILDINGS[key];
   const b = state.menuBuildings[key];
   const status = getMenuBuildStatus(state, key);

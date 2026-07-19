@@ -45,7 +45,7 @@ function init(){
       const resKey = btn.dataset.info;
       const label = {bois:"Bois",pierre:"Pierre",nourriture:"Nourriture",or:"Or"}[resKey];
       const income = getResourceIncome(state, resKey);
-      const cap = resKey==="or" ? "illimité" : storageCapFor(state, resKey);
+      const cap = storageCapFor(state, resKey);
       let body = `Stock : ${Math.floor(state.resources[resKey]||0)}/${cap}<br>Production : +${income.prod.toFixed(1)}/s`;
       if(income.cons>0) body += `<br>Consommation : -${income.cons.toFixed(1)}/s`;
       showInfoModal(iconFor(resKey)+" "+label, body);

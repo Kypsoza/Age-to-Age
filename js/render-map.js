@@ -266,6 +266,7 @@ function updateTickVisuals(){
     state.justDiscovered = [];
     state.justCompleted = [];
     renderTopbar();
+    renderInfoPanel();
     renderVillagePanel();
     renderRecruitPanel();
     renderUpgradesPanel();
@@ -309,6 +310,7 @@ function updateTickVisuals(){
   }
 
   renderTopbar();
+  renderInfoPanel();
   renderVillagePanel();
   renderRecruitPanel();
   renderUpgradesPanel();

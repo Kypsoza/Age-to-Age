@@ -114,6 +114,5 @@ function showResourceTooltip(anchorEl, resKey, label){
   tooltipEl.innerHTML = html;
   document.body.appendChild(tooltipEl);
   const rect = anchorEl.getBoundingClientRect();
-  tooltipEl.style.left = Math.max(8, rect.left + rect.width/2 - tooltipEl.offsetWidth/2) + "px";
-  tooltipEl.style.top = (rect.bottom + 10) + "px";
+  positionTooltip(tooltipEl, rect, false);
 }

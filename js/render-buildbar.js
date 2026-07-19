@@ -80,11 +80,30 @@ function showMenuTooltip(anchorEl, key){
   tooltipEl.innerHTML = html;
   document.body.appendChild(tooltipEl);
   const rect = anchorEl.getBoundingClientRect();
-  tooltipEl.style.left = Math.max(8, rect.left + rect.width/2 - tooltipEl.offsetWidth/2) + "px";
-  tooltipEl.style.top = (rect.top - tooltipEl.offsetHeight - 10) + "px";
+  positionTooltip(tooltipEl, rect, true);
 }
 function hideMenuTooltip(){
   if(tooltipEl){ tooltipEl.remove(); tooltipEl = null; }
+}
+
+// Positionne un tooltip pour qu'il reste toujours entièrement visible à
+// l'écran : centré horizontalement sur l'ancre mais bridé aux bords, et
+// bascule au-dessus/en-dessous de l'ancre selon la place disponible.
+function positionTooltip(el, rect, preferAbove){
+  let left = rect.left + rect.width/2 - el.offsetWidth/2;
+  left = Math.max(8, Math.min(left, window.innerWidth - el.offsetWidth - 8));
+  el.style.left = left + "px";
+
+  let top;
+  if(preferAbove){
+    top = rect.top - el.offsetHeight - 10;
+    if(top < 8) top = rect.bottom + 10;
+  } else {
+    top = rect.bottom + 10;
+    if(top + el.offsetHeight > window.innerHeight - 8) top = rect.top - el.offsetHeight - 10;
+  }
+  top = Math.max(8, Math.min(top, window.innerHeight - el.offsetHeight - 8));
+  el.style.top = top + "px";
 }
 
 // Tooltip dédié à la flèche ▲ sur la carte : contrairement au tooltip du
@@ -112,6 +131,5 @@ function showUpgradeTooltip(anchorEl, key){
   tooltipEl.innerHTML = html;
   document.body.appendChild(tooltipEl);
   const rect = anchorEl.getBoundingClientRect();
-  tooltipEl.style.left = Math.max(8, rect.left + rect.width/2 - tooltipEl.offsetWidth/2) + "px";
-  tooltipEl.style.top = (rect.top - tooltipEl.offsetHeight - 10) + "px";
+  positionTooltip(tooltipEl, rect, true);
 }

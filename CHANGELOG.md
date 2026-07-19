@@ -11,10 +11,10 @@ Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, am
 - **Recherche** : chaque site caché derrière un bouton "🔍 Lancer la recherche" nommé. Une fois lancée, assignation de plusieurs habitants en parallèle (barre de progression + chrono), coût en habitants uniquement (temporaires, libérés à la fin). Seule Nourriture est visible au départ ; sa découverte révèle Bois/Or/Emplacement HDV. La Pierre reste cachée jusqu'à la fondation du Village.
 - **Récolte manuelle** : une fois une zone découverte, on y assigne des habitants (➖➕) qui récoltent en continu (0,4/tick/habitant), plafonné par le niveau de l'Hôtel de Ville (3 de base, +5/niveau).
 - **Village** : dès l'Emplacement HDV découvert, panneau de fondation (30 bois + 15 or) → débloque le menu de construction.
-- **Bâtiments** (menu du bas, dépendances) : Hôtel de Ville (premier, débloque tout) → Maison + Forge → Pavillon de Chasse / Salle du Trésor → Cabane de Pêche → Moulin, et Maison niv.2 → Caserne. Construction chronométrée (18s + 9s/niveau), coût croissant (×1,75/niveau).
+- **Bâtiments** (menu du bas, dépendances) : Hôtel de Ville (premier, débloque tout) → Maison + Forge → Pavillon de Chasse / Salle du Trésor → Cabane de Pêche → Moulin, et Maison niv.2 → Caserne. Construction chronométrée (18s + 9s/niveau), tous les coûts mélangent Bois+Pierre+Or (×1,9/niveau) pour forcer une répartition stratégique des habitants entre les zones de récolte.
 - **Pavillon de Chasse / Cabane de Pêche** : deviennent de vrais points de récolte de nourriture sur la carte (×1,5 et ×2 le rendement de base).
-- **Forge / Moulin / Salle du Trésor** : chaque niveau débloque un palier d'amélioration d'income (+100% cumulatif) sur Bois+Pierre / Nourriture / Or respectivement, achetable indépendamment.
-- **Entrepôt** : plafond de stockage indépendant par ressource (Bois/Pierre/Nourriture, 80 de base +60/palier), améliorable séparément. L'Or reste illimité (monnaie virtuelle).
+- **Forge / Moulin / Salle du Trésor** : chaque niveau débloque un palier d'amélioration d'income (+100% cumulatif) sur Bois+Pierre / Nourriture / Or respectivement, achetable indépendamment — le coût d'un palier porte toujours sur les *autres* ressources que celle boostée.
+- **Entrepôt** : plafond de stockage indépendant par ressource (Bois/Pierre/Nourriture, 80 de base +60/palier, coût mixé ×1,7/palier), améliorable séparément. L'Or reste illimité (monnaie virtuelle).
 - **Population** : la Maison ajoute des places en réserve (+5/niveau), pas des habitants actifs. Le recrutement (bouton dédié) coûte de la nourriture, coût croissant (×1,4/recrutement). Tous les habitants actifs consomment de la nourriture en permanence, qu'ils travaillent ou non.
 - **Cycle temporel** : jours/saisons, cycle jour/nuit présent en interne mais voile visuel désactivé pour l'instant.
 
@@ -32,6 +32,15 @@ Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, am
 ---
 
 ## 🗂️ Historique des versions
+
+### v0.7 — Équilibrage stratégique & tooltips
+**Améliorations**
+- Tous les coûts (constructions ET améliorations d'income ET paliers de stockage) mélangent désormais Bois/Pierre/Or — impossible de tout financer avec une seule ressource, il faut répartir ses habitants sur plusieurs zones pour progresser
+- Chaque amélioration d'income coûte les *autres* ressources que celle qu'elle boost (améliorer le Bois coûte Pierre+Or, etc.)
+- Multiplicateurs de coût resserrés (bâtiments ×1,9/niveau, améliorations ×1,8/palier, stockage ×1,7/palier) pour empêcher d'acheter plusieurs paliers d'un coup
+
+**Corrections**
+- Tooltips qui sortaient de l'écran sur les bords : nouvelle fonction de positionnement qui les garde toujours visibles (bascule au-dessus/en-dessous, bridage horizontal)
 
 ### v0.6 — Version mobile dédiée
 **Ajouts**

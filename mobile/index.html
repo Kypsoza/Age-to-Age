@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Age to Age — Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <h1>Age to Age</h1>
+    <span id="topClock">🌱 J1</span>
+    <div id="topPop">👥 <span id="popCount">0</span></div>
+  </header>
+
+  <div id="resourceStrip">
+    <div class="resChip" id="chipBois"><span class="ic">🪵</span><span id="resBois">0</span><span class="delta" id="deltaBois"></span><button class="resInfoBtn" data-info="bois">i</button></div>
+    <div class="resChip" id="chipPierre"><span class="ic">🪨</span><span id="resPierre">0</span><span class="delta" id="deltaPierre"></span><button class="resInfoBtn" data-info="pierre">i</button></div>
+    <div class="resChip" id="chipNourriture"><span class="ic">🌾</span><span id="resNourriture">0</span><span class="delta" id="deltaNourriture"></span><button class="resInfoBtn" data-info="nourriture">i</button></div>
+    <div class="resChip" id="chipOr"><span class="ic">✨</span><span id="resOr">0</span><span class="delta" id="deltaOr"></span><button class="resInfoBtn" data-info="or">i</button></div>
+    <div class="resChip">
+      <span id="speedControls">
+        <button data-speed="1" class="active">▶</button><button data-speed="3">▶▶</button><button data-speed="0">⏸</button>
+      </span>
+    </div>
+  </div>
+
+  <main>
+    <div id="screenMap" class="screen active">
+      <div id="mapCanvas">
+        <div id="mapSvg"></div>
+        <div id="markerLayer"></div>
+      </div>
+    </div>
+
+    <div id="screenBuild" class="screen">
+      <div class="panelScreen">
+        <h2>Construire</h2>
+        <div id="villagePanelMobile"></div>
+        <div id="buildGrid" class="buildGrid"></div>
+      </div>
+    </div>
+
+    <div id="screenUpgrades" class="screen">
+      <div class="panelScreen">
+        <h2>Entrepôt</h2>
+        <div id="storageCards"></div>
+        <h2 style="margin-top:20px;">Améliorations</h2>
+        <div id="upgradeCards"></div>
+      </div>
+    </div>
+
+    <div id="screenPop" class="screen">
+      <div class="panelScreen">
+        <h2>Habitants</h2>
+        <div id="popStats"></div>
+        <div id="recruitCardMobile"></div>
+      </div>
+    </div>
+  </main>
+
+  <nav id="tabBar">
+    <button data-tab="screenMap" class="active"><span class="tabIcon">🗺️</span>Carte</button>
+    <button data-tab="screenBuild"><span class="tabIcon">🏗️</span>Construire</button>
+    <button data-tab="screenUpgrades"><span class="tabIcon">⚒️</span>Améliorations</button>
+    <button data-tab="screenPop"><span class="tabIcon">👥</span>Habitants</button>
+  </nav>
+
+  <div id="sheetOverlay"></div>
+  <div id="bottomSheet">
+    <div class="sheetHandle"></div>
+    <div id="sheetContent"></div>
+  </div>
+
+  <div id="infoModalOverlay">
+    <div id="infoModal">
+      <h3 id="infoModalTitle"></h3>
+      <p id="infoModalBody"></p>
+      <button id="infoModalClose">Fermer</button>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script src="../js/state.js"></script>
+<script src="../js/simulation.js"></script>
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="../js/storage.js"></script>
+<script src="js/render-map.js"></script>
+<script src="js/render-screens.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

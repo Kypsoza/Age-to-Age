@@ -130,6 +130,9 @@ function renderInfoPanel(){
           <button class="panelWorkerBtn" id="panelAltPlus">+ Assigner</button>
         </div>`;
     }
+    if(sel.key === "barracks" && b.level > 0){
+      html += renderDefensePanelHtml();
+    }
     panel.innerHTML = html;
     const buildBtn = document.getElementById("btnBuildMenuItem");
     if(buildBtn) buildBtn.onclick = ()=>{ buildMenuBuilding(state, sel.key); renderAll(); };
@@ -137,6 +140,10 @@ function renderInfoPanel(){
     const altPlus = document.getElementById("panelAltPlus");
     if(altMinus) altMinus.onclick = ()=>{ assignToAltGather(state, sel.key, -1); renderAll(); };
     if(altPlus) altPlus.onclick = ()=>{ assignToAltGather(state, sel.key, 1); renderAll(); };
+    const soldierMinus = document.getElementById("panelSoldierMinus");
+    const soldierPlus = document.getElementById("panelSoldierPlus");
+    if(soldierMinus) soldierMinus.onclick = ()=>{ assignSoldier(state, -1); renderAll(); };
+    if(soldierPlus) soldierPlus.onclick = ()=>{ assignSoldier(state, 1); renderAll(); };
     return;
   }
 
@@ -204,4 +211,28 @@ function renderInfoPanel(){
     if(minusBtn) minusBtn.onclick = ()=>{ assignToSite(state, site, -1); renderAll(); };
     if(plusBtn) plusBtn.onclick = ()=>{ assignToSite(state, site, 1); renderAll(); };
   }
+}
+
+// ---------------------------------------------------------------------
+// Bloc Défense (Caserne) — soldats assignés, score courant, prochaine vague
+// ---------------------------------------------------------------------
+function renderDefensePanelHtml(){
+  const b = state.menuBuildings.barracks;
+  const score = currentDefenseScore(state);
+  const threshold = currentWaveThreshold(state);
+  const waveNumber = state.defense.assaultCount + 1;
+  const ok = score >= threshold;
+  let html = `<hr style="border-color:var(--line);margin:10px 0;">
+    <div class="villageTitle" style="font-size:12px;">🛡️ Défense</div>
+    <div class="invRow"><span>Soldats assignés</span><span>${b.assignedSoldiers||0}</span></div>
+    <div style="display:flex;gap:8px;align-items:center;margin:8px 0;">
+      <button class="panelWorkerBtn" id="panelSoldierMinus">− Retirer</button>
+      <button class="panelWorkerBtn" id="panelSoldierPlus">+ Assigner</button>
+    </div>
+    <div class="invRow ${ok?'ok':'bad'}"><span>Score de Défense</span><span>${score}/${threshold}</span></div>
+    <div class="invRow"><span>Vague n°${waveNumber}</span><span>${state.defense.ticksUntilWave}s</span></div>
+    <div style="color:var(--bone-dim);font-size:10.5px;margin-top:4px;line-height:1.5;">
+      Si la Défense est insuffisante à l'arrivée de la vague, la tribu perd 25% de chaque ressource stockée.
+    </div>`;
+  return html;
 }

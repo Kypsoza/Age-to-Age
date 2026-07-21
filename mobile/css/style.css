@@ -32,6 +32,7 @@ button{touch-action:manipulation;}
 #topbar h1{font-family:var(--font-display);font-size:15px;color:var(--blue-bright);margin:0;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
 #topPop{margin-left:auto;font-family:var(--font-mono);font-size:13px;color:var(--bone-dim);display:flex;align-items:center;gap:5px;}
 #topClock{font-family:var(--font-mono);font-size:12px;color:var(--bone-dim);}
+#topDefense{font-family:var(--font-mono);font-size:12px;color:var(--bone-dim);}
 #speedControls{display:flex;gap:4px;}
 #speedControls button{
   background:var(--bg-panel);border:1px solid var(--line);color:var(--bone);
@@ -193,3 +194,4 @@ main{flex:1;position:relative;overflow:hidden;}
   box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:center;
 }
 #toast.show{opacity:1;}
+.hidden{display:none !important;}

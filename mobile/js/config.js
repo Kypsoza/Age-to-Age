@@ -9,7 +9,7 @@ const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
 const NIGHT_START_RATIO = 0.62;
-const SAVE_KEY = "age2age_save_mobile_v1"; // sauvegarde séparée de la version PC (dimensions de carte différentes)
+const SAVE_KEY = "age2age_save_mobile_v2"; // sauvegarde séparée de la version PC (dimensions de carte différentes)
 const AUTOSAVE_MS = 120000;
 
 const SEASONS = [
@@ -64,8 +64,8 @@ const ALT_GATHER = {
   fishcabin: { resource:"nourriture", rateMult:2.0 },
 };
 
-// Entrepôt : plafond de stockage indépendant par ressource. L'Or reste sans
-// limite (monnaie virtuelle et sans poids, cf. cahier des charges).
+// Entrepôt : plafond de stockage indépendant par ressource. L'Or a lui
+// aussi un plafond améliorable (coût en bois+pierre) depuis la v0.8.
 const STORAGE_CAP_BASE = 1000;
 const STORAGE_CAP_PER_TIER = 1000;
 const STORAGE_TIER_COST_BASE = {
@@ -118,3 +118,13 @@ const UPGRADES = {
   nourriture: { buildingKey:"mill",     label:"Nourriture", cost:{bois:12,pierre:8,or:10} },
 };
 const UPGRADE_COST_MULTIPLIER = 1.8;
+
+// =====================================================================
+// PHASE 8 — DÉFENSE & ASSAUTS (Caserne) — identique à la version PC
+// =====================================================================
+const DEFENSE_PER_SOLDIER = 8;
+const DEFENSE_WAVE_THRESHOLDS = [50, 65, 85, 110, 145];
+const DEFENSE_WAVE_LOOP_AT_MAX = true;
+const DEFENSE_WAVE_INTERVAL_TICKS = 90;
+const DEFENSE_LOSS_RATIO = 0.25;
+const DEFENSE_WARNING_TICKS = 15;

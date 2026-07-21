@@ -45,6 +45,30 @@ function renderTopbar(){
   const dayOfSeason = ((state.day-1) % DAYS_PER_SEASON) + 1;
   document.getElementById("clockLabel").textContent =
     `${season.name} · Jour ${dayOfSeason}/${DAYS_PER_SEASON} · ${isNight(state)?"Nuit":"Jour"}`;
+
+  renderDefenseIndicator();
+}
+
+// Petit indicateur discret dans la clock : n'apparaît qu'une fois la
+// Caserne construite, et signale un compte à rebours + un avertissement
+// visuel (couleur alerte) dans les DEFENSE_WARNING_TICKS dernières secondes.
+function renderDefenseIndicator(){
+  let el = document.getElementById("defenseIndicator");
+  const b = state.menuBuildings.barracks;
+  if(!b || b.level <= 0){
+    if(el) el.remove();
+    return;
+  }
+  if(!el){
+    el = document.createElement("span");
+    el.id = "defenseIndicator";
+    el.style.fontFamily = "var(--font-mono)";
+    el.style.fontSize = "13px";
+    document.getElementById("clock").insertBefore(el, document.getElementById("speedControls"));
+  }
+  const soon = state.defense.ticksUntilWave <= DEFENSE_WARNING_TICKS;
+  el.style.color = soon ? "var(--alert)" : "var(--bone-dim)";
+  el.textContent = `🛡️ ${state.defense.ticksUntilWave}s`;
 }
 
 function renderAll(){

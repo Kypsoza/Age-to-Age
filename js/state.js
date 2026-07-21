@@ -32,6 +32,14 @@ function freshState(){
     upgrades: { bois:0, pierre:0, or:0, nourriture:0 },
     storageTiers: { bois:0, pierre:0, nourriture:0, or:0 },
     selected: null, // {kind:'site', type} | {kind:'storage'} | {kind:'menuBuilding', key}
+    // Ces 3 champs sont normalement réinitialisés à chaque tick de timer
+    // réel par main.js (cf. BUG-P3-003), AVANT tout appel à simTick() — on
+    // leur donne malgré tout une valeur par défaut ici pour qu'un état
+    // fraîchement créé soit toujours sûr à lire, même avant le 1er tick.
+    justDiscovered: [],
+    justCompleted: [],
+    justDefenseEvent: false,
+    defense: freshDefenseState(),
   };
 
   const lake = s.decor.lake;
@@ -46,20 +54,22 @@ function freshState(){
   }
 
   // Emplacement terrestre standard (sites de recherche, entrepôt, bâtiments
-  // du menu autres que la Cabane de Pêche) — jamais sur l'eau.
+  // du menu autres que la Cabane de Pêche) — jamais sur l'eau, avec une
+  // marge suffisante pour que les boutons/contrôles ne débordent jamais
+  // hors de la carte, même sur un marqueur placé tout contre un bord.
   function pickSpot(){
     for(let attempt=0; attempt<600; attempt++){
-      const x = 60 + rand()*(MAP_W-120);
-      const y = 60 + rand()*(MAP_H-120);
+      const x = 100 + rand()*(MAP_W-200);
+      const y = 100 + rand()*(MAP_H-200);
       if(isOnLand(x,y) && spacingOk(x,y)){ taken.push({x,y}); return {x,y}; }
     }
     // fallback : au pire un peu de terre quelque part, quitte à ignorer l'espacement
     for(let attempt=0; attempt<200; attempt++){
-      const x = 60 + rand()*(MAP_W-120);
-      const y = 60 + rand()*(MAP_H-120);
+      const x = 100 + rand()*(MAP_W-200);
+      const y = 100 + rand()*(MAP_H-200);
       if(isOnLand(x,y)){ taken.push({x,y}); return {x,y}; }
     }
-    const x = 60 + rand()*(MAP_W-120), y = 60 + rand()*(MAP_H-120);
+    const x = 100 + rand()*(MAP_W-200), y = 100 + rand()*(MAP_H-200);
     taken.push({x,y});
     return {x,y};
   }
@@ -71,13 +81,13 @@ function freshState(){
       const radius = lake.r*(0.45+rand()*0.35);
       let x = lake.cx + Math.cos(angle)*radius;
       let y = lake.cy + Math.sin(angle)*radius;
-      x = Math.max(30, Math.min(MAP_W-30, x));
-      y = Math.max(30, Math.min(MAP_H-30, y));
+      x = Math.max(100, Math.min(MAP_W-100, x));
+      y = Math.max(100, Math.min(MAP_H-100, y));
       if(spacingOk(x,y)){ taken.push({x,y}); return {x,y}; }
     }
     const angle = rand()*Math.PI*2;
-    const x = Math.max(30, Math.min(MAP_W-30, lake.cx + Math.cos(angle)*lake.r*0.6));
-    const y = Math.max(30, Math.min(MAP_H-30, lake.cy + Math.sin(angle)*lake.r*0.6));
+    const x = Math.max(100, Math.min(MAP_W-100, lake.cx + Math.cos(angle)*lake.r*0.6));
+    const y = Math.max(100, Math.min(MAP_H-100, lake.cy + Math.sin(angle)*lake.r*0.6));
     taken.push({x,y});
     return {x,y};
   }
@@ -101,6 +111,7 @@ function freshState(){
   for(const key of Object.keys(MENU_BUILDINGS)){
     s.menuBuildings[key] = { level:0, building:false, buildTimeRemaining:0, buildTimeTotal:0 };
     if(ALT_GATHER[key]) s.menuBuildings[key].assigned = 0;
+    if(key === "barracks") s.menuBuildings[key].assignedSoldiers = 0;
   }
 
   // Le "townhall" du menu se construit exactement à l'emplacement révélé

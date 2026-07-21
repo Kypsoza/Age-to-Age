@@ -28,6 +28,7 @@ function importGame(file){
       const data = JSON.parse(e.target.result);
       if(!data.researchSites || !data.storage || !data.decor) throw new Error("Structure invalide.");
       state = data;
+      ensureStateMigrations(state);
       renderMapBackground();
       renderAll();
       toast("Sauvegarde importée avec succès.");
@@ -36,4 +37,14 @@ function importGame(file){
     }
   };
   reader.readAsText(file);
+}
+
+// Complète une sauvegarde plus ancienne avec les champs introduits par des
+// phases ultérieures (ex: Phase 8 — Défense), pour éviter tout crash au
+// chargement d'une partie qui ne les avait pas encore.
+function ensureStateMigrations(s){
+  if(!s.defense) s.defense = freshDefenseState();
+  if(s.menuBuildings && s.menuBuildings.barracks && typeof s.menuBuildings.barracks.assignedSoldiers !== "number"){
+    s.menuBuildings.barracks.assignedSoldiers = 0;
+  }
 }

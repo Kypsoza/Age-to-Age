@@ -175,6 +175,24 @@ function createMenuBuildingMarker(key){
     div.appendChild(ctrl);
   }
 
+  if(key === "barracks"){
+    const ctrl = document.createElement("div");
+    ctrl.className = "siteControls";
+    ctrl.title = "Soldats assignés";
+    const minus = document.createElement("button");
+    minus.className = "wcMinus";
+    minus.textContent = "−";
+    minus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, -1); renderAll(); };
+    const count = document.createElement("span");
+    count.textContent = "🗡️" + (b.assignedSoldiers || 0);
+    const plus = document.createElement("button");
+    plus.className = "wcPlus";
+    plus.textContent = "+";
+    plus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, 1); renderAll(); };
+    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
+    div.appendChild(ctrl);
+  }
+
   div.onclick = ()=>{ state.selected = {kind:'menuBuilding', key}; renderInfoPanel(); };
   return div;
 }
@@ -257,14 +275,17 @@ function updateTickVisuals(){
 
   const discoveries = state.justDiscovered && state.justDiscovered.length > 0;
   const completions = state.justCompleted && state.justCompleted.length > 0;
-  if(discoveries || completions){
-    // Un site vient d'être découvert ou une construction vient de se
-    // terminer (icône à changer, contrôles à ajouter/retirer) : un rebuild
-    // complet des marqueurs est nécessaire, mais ça ne se produit qu'à ce
-    // moment précis, jamais à chaque tick — pas de risque de scintillement.
+  const defenseEvent = !!state.justDefenseEvent;
+  if(discoveries || completions || defenseEvent){
+    // Un site vient d'être découvert, une construction vient de se terminer,
+    // ou une vague d'assaut vient d'être résolue (icône/contrôles/stocks à
+    // mettre à jour) : un rebuild complet des marqueurs est nécessaire, mais
+    // ça ne se produit qu'à ce moment précis, jamais à chaque tick — pas de
+    // risque de scintillement.
     renderMarkers();
     state.justDiscovered = [];
     state.justCompleted = [];
+    state.justDefenseEvent = false;
     renderTopbar();
     renderInfoPanel();
     renderVillagePanel();
@@ -306,6 +327,11 @@ function updateTickVisuals(){
       if(!el) continue;
       const count = el.querySelector(".siteControls span");
       if(count) count.textContent = b.assigned || 0;
+    } else if(key === "barracks" && b.level > 0){
+      const el = document.querySelector(`.marker[data-building-key="${key}"]`);
+      if(!el) continue;
+      const count = el.querySelector(".siteControls span");
+      if(count) count.textContent = "🗡️" + (b.assignedSoldiers || 0);
     }
   }
 

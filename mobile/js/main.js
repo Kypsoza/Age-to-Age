@@ -14,6 +14,12 @@ function startLoop(){
   if(loopTimer) clearInterval(loopTimer);
   loopTimer = setInterval(()=>{
     if(state.speed === 0) return;
+    // BUG-P3-003 : reset une seule fois par tick de timer réel (pas dans
+    // simTick), sinon en vitesse ×3 les événements des premiers sous-ticks
+    // sont écrasés avant qu'updateTickVisuals() ne les lise.
+    state.justDiscovered = [];
+    state.justCompleted = [];
+    state.justDefenseEvent = false;
     for(let i=0;i<state.speed;i++) simTick(state);
     updateTickVisuals();
   }, TICK_MS);
@@ -28,6 +34,7 @@ function init(){
     && existing.menuBuildings && existing.buildingPositions && existing.storage
     && existing.upgrades && existing.storageTiers && typeof existing.populationReserve === "number";
   state = compatible ? existing : freshState();
+  if(compatible) ensureStateMigrations(state);
 
   // Navigation
   document.querySelectorAll("#tabBar button").forEach(btn=>{

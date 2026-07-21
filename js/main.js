@@ -6,6 +6,14 @@ function startLoop(){
   if(loopTimer) clearInterval(loopTimer);
   loopTimer = setInterval(()=>{
     if(state.speed === 0) return;
+    // BUG-P3-003 : le reset de justDiscovered/justCompleted/justDefenseEvent
+    // doit se faire UNE SEULE FOIS par tick de timer réel, ici — pas dans
+    // simTick() — sinon en vitesse ×3, les 2 premiers sous-ticks de la
+    // rafale voient leurs événements écrasés par les sous-ticks suivants
+    // avant même qu'updateTickVisuals() n'ait pu les lire.
+    state.justDiscovered = [];
+    state.justCompleted = [];
+    state.justDefenseEvent = false;
     for(let i=0;i<state.speed;i++) simTick(state);
     updateTickVisuals();
   }, TICK_MS);
@@ -20,6 +28,7 @@ function init(){
     && existing.menuBuildings && existing.buildingPositions && existing.storage
     && existing.upgrades && existing.storageTiers && typeof existing.populationReserve === "number";
   state = compatible ? existing : freshState();
+  if(compatible) ensureStateMigrations(state);
 
   // Les boutons sont branchés AVANT le premier rendu : si jamais le rendu
   // plante (ex: sauvegarde incompatible), les contrôles restent utilisables

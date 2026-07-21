@@ -205,6 +205,18 @@ function createMenuBuildingMarker(key){
     div.appendChild(ctrl);
   }
 
+  if(key === "barracks"){
+    const ctrl = document.createElement("div");
+    ctrl.className = "siteControls";
+    const minus = document.createElement("button"); minus.className = "wcMinus"; minus.textContent = "−";
+    minus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, -1); renderAll(); };
+    const count = document.createElement("span"); count.textContent = "🗡️" + (b.assignedSoldiers || 0);
+    const plus = document.createElement("button"); plus.className = "wcPlus"; plus.textContent = "+";
+    plus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, 1); renderAll(); };
+    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
+    div.appendChild(ctrl);
+  }
+
   div.onclick = ()=> openBuildingSheet(key);
   return div;
 }
@@ -212,10 +224,12 @@ function createMenuBuildingMarker(key){
 function updateTickVisuals(){
   const discoveries = state.justDiscovered && state.justDiscovered.length > 0;
   const completions = state.justCompleted && state.justCompleted.length > 0;
-  if(discoveries || completions){
+  const defenseEvent = !!state.justDefenseEvent;
+  if(discoveries || completions || defenseEvent){
     renderMarkers();
     state.justDiscovered = [];
     state.justCompleted = [];
+    state.justDefenseEvent = false;
     renderTopStrip();
     renderBuildScreen();
     renderUpgradesScreen();
@@ -247,6 +261,11 @@ function updateTickVisuals(){
       if(!el) continue;
       const count = el.querySelector(".siteControls span");
       if(count) count.textContent = b.assigned || 0;
+    } else if(key === "barracks" && b.level > 0){
+      const el = document.querySelector(`.marker[data-building-key="${key}"]`);
+      if(!el) continue;
+      const count = el.querySelector(".siteControls span");
+      if(count) count.textContent = "🗡️" + (b.assignedSoldiers || 0);
     }
   }
   renderTopStrip();

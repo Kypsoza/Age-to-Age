@@ -32,6 +32,24 @@ function renderTopStrip(){
   const season = currentSeason(state);
   const dayOfSeason = ((state.day-1) % DAYS_PER_SEASON) + 1;
   document.getElementById("topClock").textContent = `${season.icon} J${dayOfSeason}`;
+
+  renderTopDefense();
+}
+
+// Indicateur condensé dans la topbar mobile : n'apparaît qu'une fois la
+// Caserne construite, s'allume en rouge dans les DEFENSE_WARNING_TICKS
+// dernières secondes avant l'assaut.
+function renderTopDefense(){
+  const el = document.getElementById("topDefense");
+  const b = state.menuBuildings.barracks;
+  if(!b || b.level <= 0){
+    el.classList.add("hidden");
+    return;
+  }
+  el.classList.remove("hidden");
+  const soon = state.defense.ticksUntilWave <= DEFENSE_WARNING_TICKS;
+  el.style.color = soon ? "var(--alert)" : "var(--bone-dim)";
+  el.textContent = `🛡️ ${state.defense.ticksUntilWave}s`;
 }
 
 // =====================================================================
@@ -135,6 +153,9 @@ function openBuildingSheet(key){
           <button class="bigActionBtn" id="sheetAltPlus">+ Assigner</button>
         </div>`;
     }
+    if(key === "barracks" && b.level > 0){
+      html += renderDefenseSheetHtml();
+    }
   }
   openSheet(html);
   const buildBtn = document.getElementById("sheetBuild");
@@ -142,6 +163,33 @@ function openBuildingSheet(key){
   const am = document.getElementById("sheetAltMinus"), ap = document.getElementById("sheetAltPlus");
   if(am) am.onclick = ()=>{ assignToAltGather(state, key, -1); renderAll(); openBuildingSheet(key); };
   if(ap) ap.onclick = ()=>{ assignToAltGather(state, key, 1); renderAll(); openBuildingSheet(key); };
+  const sm = document.getElementById("sheetSoldierMinus"), sp = document.getElementById("sheetSoldierPlus");
+  if(sm) sm.onclick = ()=>{ assignSoldier(state, -1); renderAll(); openBuildingSheet(key); };
+  if(sp) sp.onclick = ()=>{ assignSoldier(state, 1); renderAll(); openBuildingSheet(key); };
+}
+
+// ---------------------------------------------------------------------
+// Bloc Défense (Caserne) — soldats, score courant, prochaine vague
+// ---------------------------------------------------------------------
+function renderDefenseSheetHtml(){
+  const b = state.menuBuildings.barracks;
+  const score = currentDefenseScore(state);
+  const threshold = currentWaveThreshold(state);
+  const waveNumber = state.defense.assaultCount + 1;
+  const ok = score >= threshold;
+  return `<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px;">
+    <div class="villageTitle" style="font-size:14px;">🛡️ Défense</div>
+    <div class="invRow"><span>Soldats assignés</span><span>${b.assignedSoldiers||0}</span></div>
+    <div style="display:flex;gap:10px;margin:10px 0;">
+      <button class="bigActionBtn" id="sheetSoldierMinus" style="background:var(--bg-panel-2);border-color:var(--line);">− Retirer</button>
+      <button class="bigActionBtn" id="sheetSoldierPlus">+ Assigner</button>
+    </div>
+    <div class="invRow ${ok?'ok':'bad'}"><span>Score de Défense</span><span>${score}/${threshold}</span></div>
+    <div class="invRow"><span>Vague n°${waveNumber}</span><span>${state.defense.ticksUntilWave}s</span></div>
+    <div style="color:var(--bone-dim);font-size:11.5px;margin-top:6px;line-height:1.5;">
+      Défense insuffisante à l'arrivée de la vague = -25% de chaque ressource stockée.
+    </div>
+  </div>`;
 }
 
 // =====================================================================

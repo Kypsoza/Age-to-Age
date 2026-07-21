@@ -36,6 +36,12 @@ function renderBuildBar(){
     item.onclick = ()=>{
       if(b.building){ toast("Construction en cours..."); return; }
       if(built){
+        if(key === "barracks"){
+          state.selected = {kind:'menuBuilding', key};
+          renderInfoPanel();
+          toast("Gère tes soldats depuis le panneau de droite.");
+          return;
+        }
         toast("Déjà construit — utilise la flèche ▲ sur la carte pour l'améliorer.");
         return;
       }
@@ -64,7 +70,14 @@ function showMenuTooltip(anchorEl, key){
   if(b.building){
     html += `<div class="reqLine ok">🚧 En construction : ${b.buildTimeRemaining}s restantes</div>`;
   } else if(b.level > 0){
-    html += `<div class="reqLine ok" style="margin-top:6px;">✓ Construit — améliore-le depuis la carte</div>`;
+    if(key === "barracks"){
+      const score = currentDefenseScore(state);
+      const threshold = currentWaveThreshold(state);
+      html += `<div class="reqLine ${score>=threshold?'ok':'bad'}">🛡️ Défense ${score}/${threshold}</div>
+        <div class="reqLine">⏳ Prochaine vague dans ${state.defense.ticksUntilWave}s</div>`;
+    } else {
+      html += `<div class="reqLine ok" style="margin-top:6px;">✓ Construit — améliore-le depuis la carte</div>`;
+    }
   } else if(status.locked){
     html += `<div style="margin-top:6px;">`;
     for(const l of status.lines){

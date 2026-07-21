@@ -12,6 +12,7 @@ function getFreePopulation(s){
   for(const key of Object.keys(ALT_GATHER)){
     busy += s.menuBuildings[key].assigned || 0;
   }
+  busy += (s.menuBuildings.barracks && s.menuBuildings.barracks.assignedSoldiers) || 0;
   return s.population - busy;
 }
 
@@ -91,8 +92,6 @@ function simTick(s){
     if((s.day-1) % DAYS_PER_SEASON === 0) s.seasonIdx = (s.seasonIdx+1) % SEASONS.length;
   }
 
-  s.justDiscovered = [];
-
   for(const site of s.researchSites){
     if(site.locked) continue;
 
@@ -140,7 +139,6 @@ function simTick(s){
   s.resources.nourriture = Math.max(0, s.resources.nourriture - s.population*FOOD_CONSUMPTION);
 
   // Progression des constructions/améliorations en cours.
-  s.justCompleted = [];
   for(const key of Object.keys(s.menuBuildings)){
     const b = s.menuBuildings[key];
     if(!b.building) continue;
@@ -159,6 +157,9 @@ function simTick(s){
       }
     }
   }
+
+  // Défense & assauts (Phase 8) : ne démarre qu'une fois la Caserne construite.
+  tickDefense(s);
 }
 
 // Revenu net (production - consommation) par ressource, pour le topbar.
@@ -353,4 +354,73 @@ function buyStorageTier(s, resKey){
   for(const [res,amt] of Object.entries(cost)) s.resources[res] -= amt;
   s.storageTiers[resKey]++;
   toast(`Entrepôt : plafond ${iconFor(resKey)} porté à ${storageCapFor(s,resKey)}.`);
+}
+
+// =====================================================================
+// PHASE 8 — DÉFENSE & ASSAUTS (Caserne)
+// =====================================================================
+function freshDefenseState(){
+  return { active:false, assaultCount:0, ticksUntilWave: DEFENSE_WAVE_INTERVAL_TICKS, lastResult:null };
+}
+
+function currentDefenseScore(s){
+  const b = s.menuBuildings.barracks;
+  if(!b || b.level<=0) return 0;
+  return (b.assignedSoldiers||0) * DEFENSE_PER_SOLDIER;
+}
+
+function currentWaveThreshold(s){
+  const idx = Math.min(s.defense.assaultCount, DEFENSE_WAVE_THRESHOLDS.length-1);
+  return DEFENSE_WAVE_THRESHOLDS[idx];
+}
+
+function assignSoldier(s, delta){
+  const b = s.menuBuildings.barracks;
+  if(!b || b.level<=0) return;
+  if(delta>0){
+    if(getFreePopulation(s)<=0){ toast("Aucun habitant disponible pour la Caserne."); return; }
+  } else {
+    if((b.assignedSoldiers||0)<=0) return;
+  }
+  b.assignedSoldiers = (b.assignedSoldiers||0) + delta;
+  if(b.assignedSoldiers<0) b.assignedSoldiers = 0;
+}
+
+function resolveDefenseWave(s){
+  const threshold = currentWaveThreshold(s);
+  const score = currentDefenseScore(s);
+  const waveNumber = s.defense.assaultCount + 1;
+  const success = score >= threshold;
+
+  if(success){
+    toast(`🛡️ Vague d'assaut n°${waveNumber} repoussée ! Défense ${score}/${threshold}.`);
+    s.defense.lastResult = { waveNumber, success:true, score, threshold };
+  } else {
+    const lostAmounts = {};
+    for(const res of STORABLE_RESOURCES){
+      const have = s.resources[res]||0;
+      const lost = Math.floor(have*DEFENSE_LOSS_RATIO);
+      s.resources[res] = have - lost;
+      lostAmounts[res] = lost;
+    }
+    toast(`⚠️ Vague d'assaut n°${waveNumber} ! Défense insuffisante (${score}/${threshold}) : -25% des stocks.`);
+    s.defense.lastResult = { waveNumber, success:false, score, threshold, lostAmounts };
+  }
+
+  s.defense.assaultCount++;
+  s.defense.ticksUntilWave = DEFENSE_WAVE_INTERVAL_TICKS;
+  s.justDefenseEvent = true;
+}
+
+function tickDefense(s){
+  const b = s.menuBuildings.barracks;
+  if(!b || b.level<=0) return;
+  if(!s.defense.active){
+    s.defense.active = true;
+    s.defense.ticksUntilWave = DEFENSE_WAVE_INTERVAL_TICKS;
+  }
+  s.defense.ticksUntilWave--;
+  if(s.defense.ticksUntilWave <= 0){
+    resolveDefenseWave(s);
+  }
 }

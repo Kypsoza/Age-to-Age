@@ -7,7 +7,7 @@ const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
 const NIGHT_START_RATIO = 0.62;
-const SAVE_KEY = "age2age_save_phase1_v5";
+const SAVE_KEY = "age2age_save_phase1_v6";
 const AUTOSAVE_MS = 120000;
 
 const SEASONS = [
@@ -119,3 +119,19 @@ const UPGRADES = {
   nourriture: { buildingKey:"mill",     label:"Nourriture", cost:{bois:12,pierre:8,or:10} },
 };
 const UPGRADE_COST_MULTIPLIER = 1.8;
+
+// =====================================================================
+// PHASE 8 — DÉFENSE & ASSAUTS (Caserne)
+// =====================================================================
+// La Caserne (barracks) permet d'assigner des habitants comme soldats.
+// Chaque soldat assigné apporte un score de Défense fixe. À intervalle
+// régulier (DEFENSE_WAVE_INTERVAL_TICKS), une vague d'assaut survient :
+// si le score de Défense au moment de l'assaut est insuffisant face au
+// seuil de la vague courante, la tribu perd un pourcentage de chaque
+// ressource stockée ; sinon la vague est repoussée sans perte.
+const DEFENSE_PER_SOLDIER = 8;           // score de Défense apporté par soldat assigné
+const DEFENSE_WAVE_THRESHOLDS = [50, 65, 85, 110, 145]; // seuils des 5 premières vagues (~×1.3/vague)
+const DEFENSE_WAVE_LOOP_AT_MAX = true;   // au-delà de la 5e, les vagues suivantes restent au dernier seuil (145), en boucle
+const DEFENSE_WAVE_INTERVAL_TICKS = 90;  // intervalle entre deux vagues d'assaut (secondes de jeu, ticks=1s)
+const DEFENSE_LOSS_RATIO = 0.25;         // fraction perdue de chaque ressource stockée si la défense est insuffisante
+const DEFENSE_WARNING_TICKS = 15;        // ticks avant l'assaut à partir desquels un avertissement s'affiche

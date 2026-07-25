@@ -129,10 +129,24 @@ const UPGRADE_COST_MULTIPLIER = 1.8;
 // si le score de Défense au moment de l'assaut est insuffisant face au
 // seuil de la vague courante, la tribu perd un pourcentage de chaque
 // ressource stockée ; sinon la vague est repoussée sans perte.
-const DEFENSE_PER_SOLDIER = 8;           // score de Défense apporté par soldat assigné
+//
+// Calibrage (simulé avec un bot jouant "efficacement" : recherche/récolte
+// répartie automatiquement, construction Hôtel de Ville → Maison ×2 →
+// Caserne dès que possible) :
+//  - Ce bot fonde le Village en ~1,5 min et termine la Caserne en ~5 min.
+//  - Avec DEFENSE_PER_SOLDIER=25, les seuils [50,65,85,110,145] ne
+//    demandent plus que 2 / 3 / 4 / 5 / 6 soldats (au lieu de 7 à 19 avec
+//    l'ancienne valeur de 8) — largement atteignable avec la population
+//    d'une dizaine d'habitants disponible à ce stade.
+//  - Le délai avant la 1ère vague est porté à 10 minutes (600 ticks) pour
+//    laisser une marge confortable à un joueur normal (moins optimisé que
+//    le bot de test) : de quoi fonder le Village, construire l'Hôtel de
+//    Ville, la Maison (x2, pour débloquer la Caserne), la Caserne
+//    elle-même, ET recruter/assigner quelques soldats avant le 1er assaut.
+const DEFENSE_PER_SOLDIER = 25;          // score de Défense apporté par soldat assigné
 const DEFENSE_WAVE_THRESHOLDS = [50, 65, 85, 110, 145]; // seuils des 5 premières vagues (~×1.3/vague)
 const DEFENSE_WAVE_LOOP_AT_MAX = true;   // au-delà de la 5e, les vagues suivantes restent au dernier seuil (145), en boucle
-const DEFENSE_FIRST_WAVE_TICKS = 240;    // 1ère vague déclenchée automatiquement 4 minutes après le début de la partie (indépendant de la Caserne)
+const DEFENSE_FIRST_WAVE_TICKS = 600;    // 1ère vague déclenchée automatiquement 10 minutes après le début de la partie (indépendant de la Caserne)
 const DEFENSE_WAVE_INTERVAL_TICKS = 90;  // intervalle entre les vagues suivantes (secondes de jeu, ticks=1s)
 const DEFENSE_LOSS_RATIO = 0.25;         // fraction perdue de chaque ressource stockée si la défense est insuffisante
 const DEFENSE_WARNING_TICKS = 15;        // ticks avant l'assaut à partir desquels un avertissement s'affiche

@@ -33,6 +33,11 @@ Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, am
 
 ## 🗂️ Historique des versions
 
+### v0.9.1 — Rééquilibrage Défense (valeur/soldat + délai 1ère vague)
+**Ajustements**
+- Score de Défense par soldat porté de 8 à **25** : les seuils des vagues [50,65,85,110,145] ne demandent plus que 2/3/4/5/6 soldats (au lieu de 7 à 19), largement atteignable avec la population disponible à ce stade de la partie
+- Délai avant la 1ère vague automatique porté de 4 à **10 minutes** (600 ticks), calibré avec un bot de simulation jouant "efficacement" (recherche/récolte + construction Hôtel de Ville→Maison×2→Caserne dès que possible) : ce bot fonde le Village en ~1,5 min et termine la Caserne en ~5 min — 10 minutes laisse une marge confortable à un joueur normal pour tout construire ET recruter/assigner quelques soldats avant le 1er assaut
+
 ### v0.9 — Phase 8 : Défense & Assauts (Caserne)
 **Ajouts**
 - La Caserne (une fois construite, maison niv.2 requis) permet d'assigner des habitants comme soldats **uniquement via les boutons ➖➕ sur la carte, sous l'icône de la Caserne** (pas depuis le panneau de droite / la fiche mobile, qui n'affichent que l'état), chaque soldat apportant 8 points de Défense

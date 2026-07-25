@@ -122,10 +122,15 @@ const UPGRADE_COST_MULTIPLIER = 1.8;
 // =====================================================================
 // PHASE 8 — DÉFENSE & ASSAUTS (Caserne) — identique à la version PC
 // =====================================================================
-const DEFENSE_PER_SOLDIER = 8;
+// Calibrage (identique à la version PC) : DEFENSE_PER_SOLDIER=25 ramène les
+// seuils [50,65,85,110,145] à 2/3/4/5/6 soldats (au lieu de 7 à 19 avec
+// l'ancienne valeur de 8). Délai avant la 1ère vague porté à 10 minutes pour
+// laisser le temps de fonder le Village, construire Hôtel de Ville + Maison
+// ×2 + Caserne, et assigner quelques soldats avant le 1er assaut.
+const DEFENSE_PER_SOLDIER = 25;
 const DEFENSE_WAVE_THRESHOLDS = [50, 65, 85, 110, 145];
 const DEFENSE_WAVE_LOOP_AT_MAX = true;
-const DEFENSE_FIRST_WAVE_TICKS = 240;
+const DEFENSE_FIRST_WAVE_TICKS = 600;
 const DEFENSE_WAVE_INTERVAL_TICKS = 90;
 const DEFENSE_LOSS_RATIO = 0.25;
 const DEFENSE_WARNING_TICKS = 15;

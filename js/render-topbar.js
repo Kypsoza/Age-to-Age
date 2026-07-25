@@ -46,29 +46,34 @@ function renderTopbar(){
   document.getElementById("clockLabel").textContent =
     `${season.name} · Jour ${dayOfSeason}/${DAYS_PER_SEASON} · ${isNight(state)?"Nuit":"Jour"}`;
 
-  renderDefenseIndicator();
+  renderDefenseHud();
 }
 
-// Petit indicateur discret dans la clock : n'apparaît qu'une fois la
-// Caserne construite, et signale un compte à rebours + un avertissement
-// visuel (couleur alerte) dans les DEFENSE_WARNING_TICKS dernières secondes.
-function renderDefenseIndicator(){
-  let el = document.getElementById("defenseIndicator");
+// =====================================================================
+// HUD DÉFENSE — fixe en haut à gauche de l'écran (visible dès le début de
+// la partie, puisque la 1ère vague survient automatiquement 4 minutes
+// après le lancement, qu'une Caserne existe ou non). Reprend les mêmes
+// infos que la tuile Défense de la barre du bas (icône, niveau, score),
+// plus une barre de progression + un compte à rebours toujours visibles
+// sans avoir à ouvrir le panneau de droite ni scroller jusqu'au menu.
+function renderDefenseHud(){
+  const el = document.getElementById("defenseHud");
+  if(!el) return;
   const b = state.menuBuildings.barracks;
-  if(!b || b.level <= 0){
-    if(el) el.remove();
-    return;
-  }
-  if(!el){
-    el = document.createElement("span");
-    el.id = "defenseIndicator";
-    el.style.fontFamily = "var(--font-mono)";
-    el.style.fontSize = "13px";
-    document.getElementById("clock").insertBefore(el, document.getElementById("speedControls"));
-  }
+  const built = b && b.level > 0;
+  const score = currentDefenseScore(state);
+  const threshold = currentWaveThreshold(state);
+  const total = state.defense.assaultCount === 0 ? DEFENSE_FIRST_WAVE_TICKS : DEFENSE_WAVE_INTERVAL_TICKS;
+  const pct = Math.max(0, Math.min(100, Math.round((1 - state.defense.ticksUntilWave/total) * 100)));
   const soon = state.defense.ticksUntilWave <= DEFENSE_WARNING_TICKS;
-  el.style.color = soon ? "var(--alert)" : "var(--bone-dim)";
-  el.textContent = `🛡️ ${state.defense.ticksUntilWave}s`;
+  const ok = score >= threshold;
+
+  el.innerHTML = `
+    <div class="defenseHudTitle">${built ? MENU_BUILDINGS.barracks.icon : "🔒"} Défense — Vague n°${state.defense.assaultCount+1}</div>
+    <div class="defenseHudBar"><div class="defenseHudFill${soon?' warn':''}" style="width:${pct}%;"></div></div>
+    <div class="defenseHudRow"><span>${soon?'⚠️ ':'⏳ '}${state.defense.ticksUntilWave}s</span><span class="${ok?'ok':'bad'}">${score}/${threshold}</span></div>
+    ${built ? `<div class="defenseHudRow"><span>🗡️ Soldats</span><span>${b.assignedSoldiers||0}</span></div>` : `<div class="defenseHudRow" style="color:var(--bone-dim);font-size:10.5px;">Caserne non construite</div>`}
+  `;
 }
 
 function renderAll(){
@@ -131,6 +136,13 @@ function showResourceTooltip(anchorEl, resKey, label){
     const inc = getResourceIncome(state,"nourriture");
     if(inc.cons>0){
       html += `<div class="reqLine bad"><span>Population (${state.population} hab., consomme toujours)</span><span>-${inc.cons.toFixed(1)}/s</span></div>`;
+    }
+  }
+  if(resKey==="or"){
+    const inc = getResourceIncome(state,"or");
+    if(inc.cons>0){
+      const b = state.menuBuildings.barracks;
+      html += `<div class="reqLine bad"><span>🗡️ Soldats (${b.assignedSoldiers||0}, entretien continu)</span><span>-${inc.cons.toFixed(2)}/s</span></div>`;
     }
   }
   tooltipEl.innerHTML = html;

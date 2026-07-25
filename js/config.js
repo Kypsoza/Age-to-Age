@@ -132,6 +132,8 @@ const UPGRADE_COST_MULTIPLIER = 1.8;
 const DEFENSE_PER_SOLDIER = 8;           // score de Défense apporté par soldat assigné
 const DEFENSE_WAVE_THRESHOLDS = [50, 65, 85, 110, 145]; // seuils des 5 premières vagues (~×1.3/vague)
 const DEFENSE_WAVE_LOOP_AT_MAX = true;   // au-delà de la 5e, les vagues suivantes restent au dernier seuil (145), en boucle
-const DEFENSE_WAVE_INTERVAL_TICKS = 90;  // intervalle entre deux vagues d'assaut (secondes de jeu, ticks=1s)
+const DEFENSE_FIRST_WAVE_TICKS = 240;    // 1ère vague déclenchée automatiquement 4 minutes après le début de la partie (indépendant de la Caserne)
+const DEFENSE_WAVE_INTERVAL_TICKS = 90;  // intervalle entre les vagues suivantes (secondes de jeu, ticks=1s)
 const DEFENSE_LOSS_RATIO = 0.25;         // fraction perdue de chaque ressource stockée si la défense est insuffisante
 const DEFENSE_WARNING_TICKS = 15;        // ticks avant l'assaut à partir desquels un avertissement s'affiche
+const DEFENSE_SOLDIER_GOLD_COST = 0.2;   // or / tick / soldat assigné (en plus de la nourriture consommée par tout habitant)

@@ -140,10 +140,6 @@ function renderInfoPanel(){
     const altPlus = document.getElementById("panelAltPlus");
     if(altMinus) altMinus.onclick = ()=>{ assignToAltGather(state, sel.key, -1); renderAll(); };
     if(altPlus) altPlus.onclick = ()=>{ assignToAltGather(state, sel.key, 1); renderAll(); };
-    const soldierMinus = document.getElementById("panelSoldierMinus");
-    const soldierPlus = document.getElementById("panelSoldierPlus");
-    if(soldierMinus) soldierMinus.onclick = ()=>{ assignSoldier(state, -1); renderAll(); };
-    if(soldierPlus) soldierPlus.onclick = ()=>{ assignSoldier(state, 1); renderAll(); };
     return;
   }
 
@@ -225,14 +221,11 @@ function renderDefensePanelHtml(){
   let html = `<hr style="border-color:var(--line);margin:10px 0;">
     <div class="villageTitle" style="font-size:12px;">🛡️ Défense</div>
     <div class="invRow"><span>Soldats assignés</span><span>${b.assignedSoldiers||0}</span></div>
-    <div style="display:flex;gap:8px;align-items:center;margin:8px 0;">
-      <button class="panelWorkerBtn" id="panelSoldierMinus">− Retirer</button>
-      <button class="panelWorkerBtn" id="panelSoldierPlus">+ Assigner</button>
-    </div>
+    <div style="color:var(--bone-dim);font-size:10.5px;margin:4px 0 8px;">Assigne/retire des soldats depuis les boutons ➖➕ sous l'icône de la Caserne, sur la carte.</div>
     <div class="invRow ${ok?'ok':'bad'}"><span>Score de Défense</span><span>${score}/${threshold}</span></div>
     <div class="invRow"><span>Vague n°${waveNumber}</span><span>${state.defense.ticksUntilWave}s</span></div>
     <div style="color:var(--bone-dim);font-size:10.5px;margin-top:4px;line-height:1.5;">
-      Si la Défense est insuffisante à l'arrivée de la vague, la tribu perd 25% de chaque ressource stockée.
+      Si la Défense est insuffisante à l'arrivée de la vague, la tribu perd 25% de chaque ressource stockée. Chaque soldat coûte aussi ${DEFENSE_SOLDIER_GOLD_COST} ✨/s.
     </div>`;
   return html;
 }

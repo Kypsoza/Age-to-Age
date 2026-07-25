@@ -33,23 +33,30 @@ function renderTopStrip(){
   const dayOfSeason = ((state.day-1) % DAYS_PER_SEASON) + 1;
   document.getElementById("topClock").textContent = `${season.icon} J${dayOfSeason}`;
 
-  renderTopDefense();
+  renderDefenseHud();
 }
 
-// Indicateur condensé dans la topbar mobile : n'apparaît qu'une fois la
-// Caserne construite, s'allume en rouge dans les DEFENSE_WARNING_TICKS
-// dernières secondes avant l'assaut.
-function renderTopDefense(){
-  const el = document.getElementById("topDefense");
+// HUD Défense mobile — fixe en haut à gauche de l'écran, sous la topbar.
+// Visible dès le début de la partie (la 1ère vague survient automatiquement
+// 4 minutes après le lancement, qu'une Caserne existe ou non).
+function renderDefenseHud(){
+  const el = document.getElementById("defenseHud");
+  if(!el) return;
   const b = state.menuBuildings.barracks;
-  if(!b || b.level <= 0){
-    el.classList.add("hidden");
-    return;
-  }
-  el.classList.remove("hidden");
+  const built = b && b.level > 0;
+  const score = currentDefenseScore(state);
+  const threshold = currentWaveThreshold(state);
+  const total = state.defense.assaultCount === 0 ? DEFENSE_FIRST_WAVE_TICKS : DEFENSE_WAVE_INTERVAL_TICKS;
+  const pct = Math.max(0, Math.min(100, Math.round((1 - state.defense.ticksUntilWave/total) * 100)));
   const soon = state.defense.ticksUntilWave <= DEFENSE_WARNING_TICKS;
-  el.style.color = soon ? "var(--alert)" : "var(--bone-dim)";
-  el.textContent = `🛡️ ${state.defense.ticksUntilWave}s`;
+  const ok = score >= threshold;
+
+  el.innerHTML = `
+    <div class="defenseHudTitle">${built ? MENU_BUILDINGS.barracks.icon : "🔒"} Défense — Vague n°${state.defense.assaultCount+1}</div>
+    <div class="defenseHudBar"><div class="defenseHudFill${soon?' warn':''}" style="width:${pct}%;"></div></div>
+    <div class="defenseHudRow"><span>${soon?'⚠️ ':'⏳ '}${state.defense.ticksUntilWave}s</span><span class="${ok?'ok':'bad'}">${score}/${threshold}</span></div>
+    ${built ? `<div class="defenseHudRow"><span>🗡️ Soldats</span><span>${b.assignedSoldiers||0}</span></div>` : `<div class="defenseHudRow" style="color:var(--bone-dim);font-size:10px;">Caserne non construite</div>`}
+  `;
 }
 
 // =====================================================================
@@ -163,13 +170,12 @@ function openBuildingSheet(key){
   const am = document.getElementById("sheetAltMinus"), ap = document.getElementById("sheetAltPlus");
   if(am) am.onclick = ()=>{ assignToAltGather(state, key, -1); renderAll(); openBuildingSheet(key); };
   if(ap) ap.onclick = ()=>{ assignToAltGather(state, key, 1); renderAll(); openBuildingSheet(key); };
-  const sm = document.getElementById("sheetSoldierMinus"), sp = document.getElementById("sheetSoldierPlus");
-  if(sm) sm.onclick = ()=>{ assignSoldier(state, -1); renderAll(); openBuildingSheet(key); };
-  if(sp) sp.onclick = ()=>{ assignSoldier(state, 1); renderAll(); openBuildingSheet(key); };
 }
 
 // ---------------------------------------------------------------------
-// Bloc Défense (Caserne) — soldats, score courant, prochaine vague
+// Bloc Défense (Caserne) — soldats, score courant, prochaine vague.
+// Affichage seul : l'assignation de soldats se fait uniquement via les
+// boutons ➖➕ sous l'icône de la Caserne, sur la carte.
 // ---------------------------------------------------------------------
 function renderDefenseSheetHtml(){
   const b = state.menuBuildings.barracks;
@@ -180,14 +186,11 @@ function renderDefenseSheetHtml(){
   return `<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px;">
     <div class="villageTitle" style="font-size:14px;">🛡️ Défense</div>
     <div class="invRow"><span>Soldats assignés</span><span>${b.assignedSoldiers||0}</span></div>
-    <div style="display:flex;gap:10px;margin:10px 0;">
-      <button class="bigActionBtn" id="sheetSoldierMinus" style="background:var(--bg-panel-2);border-color:var(--line);">− Retirer</button>
-      <button class="bigActionBtn" id="sheetSoldierPlus">+ Assigner</button>
-    </div>
+    <div style="color:var(--bone-dim);font-size:11px;margin:4px 0 8px;">Assigne/retire des soldats depuis les boutons ➖➕ sous l'icône de la Caserne, sur la carte.</div>
     <div class="invRow ${ok?'ok':'bad'}"><span>Score de Défense</span><span>${score}/${threshold}</span></div>
     <div class="invRow"><span>Vague n°${waveNumber}</span><span>${state.defense.ticksUntilWave}s</span></div>
     <div style="color:var(--bone-dim);font-size:11.5px;margin-top:6px;line-height:1.5;">
-      Défense insuffisante à l'arrivée de la vague = -25% de chaque ressource stockée.
+      Défense insuffisante à l'arrivée de la vague = -25% de chaque ressource stockée. Chaque soldat coûte aussi ${DEFENSE_SOLDIER_GOLD_COST} ✨/s en continu.
     </div>
   </div>`;
 }

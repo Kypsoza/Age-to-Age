@@ -39,7 +39,7 @@ function renderBuildBar(){
         if(key === "barracks"){
           state.selected = {kind:'menuBuilding', key};
           renderInfoPanel();
-          toast("Gère tes soldats depuis le panneau de droite.");
+          toast("Assigne des soldats depuis les boutons ➖➕ sur la carte, sous l'icône de la Caserne.");
           return;
         }
         toast("Déjà construit — utilise la flèche ▲ sur la carte pour l'améliorer.");

@@ -138,6 +138,9 @@ function simTick(s){
   // de nourriture est en cours de récolte ce tick précis.
   s.resources.nourriture = Math.max(0, s.resources.nourriture - s.population*FOOD_CONSUMPTION);
 
+  // Solde des soldats (or/tick), en plus de la nourriture déjà décomptée ci-dessus.
+  paySoldierUpkeep(s);
+
   // Progression des constructions/améliorations en cours.
   for(const key of Object.keys(s.menuBuildings)){
     const b = s.menuBuildings[key];
@@ -178,6 +181,9 @@ function getResourceIncome(s, resKey){
   let cons = 0;
   if(resKey==="nourriture"){
     cons = s.population*FOOD_CONSUMPTION;
+  } else if(resKey==="or"){
+    const b = s.menuBuildings.barracks;
+    if(b && b.assignedSoldiers) cons = b.assignedSoldiers * DEFENSE_SOLDIER_GOLD_COST;
   }
   return { prod, cons, net: prod-cons };
 }
@@ -359,8 +365,12 @@ function buyStorageTier(s, resKey){
 // =====================================================================
 // PHASE 8 — DÉFENSE & ASSAUTS (Caserne)
 // =====================================================================
+// Le décompte démarre dès le début de la partie, indépendamment de la
+// Caserne : la 1ère vague survient automatiquement 4 minutes après le
+// début (DEFENSE_FIRST_WAVE_TICKS), qu'il y ait ou non des soldats pour
+// la repousser. Les vagues suivantes reviennent toutes les 90s.
 function freshDefenseState(){
-  return { active:false, assaultCount:0, ticksUntilWave: DEFENSE_WAVE_INTERVAL_TICKS, lastResult:null };
+  return { active:true, assaultCount:0, ticksUntilWave: DEFENSE_FIRST_WAVE_TICKS, lastResult:null };
 }
 
 function currentDefenseScore(s){
@@ -384,6 +394,30 @@ function assignSoldier(s, delta){
   }
   b.assignedSoldiers = (b.assignedSoldiers||0) + delta;
   if(b.assignedSoldiers<0) b.assignedSoldiers = 0;
+}
+
+// Solde d'or des soldats : en plus de la nourriture que consomme tout
+// habitant actif, chaque soldat assigné coûte DEFENSE_SOLDIER_GOLD_COST
+// or/tick. Si le stock d'or ne suffit plus, les soldats en surnombre
+// désertent un par un (plutôt que de laisser l'or passer sous zéro).
+function paySoldierUpkeep(s){
+  const b = s.menuBuildings.barracks;
+  if(!b || !b.assignedSoldiers) return;
+  const fullCost = b.assignedSoldiers * DEFENSE_SOLDIER_GOLD_COST;
+  if((s.resources.or||0) >= fullCost){
+    s.resources.or -= fullCost;
+    return;
+  }
+  let soldiers = b.assignedSoldiers;
+  while(soldiers > 0 && (s.resources.or||0) < soldiers * DEFENSE_SOLDIER_GOLD_COST){
+    soldiers--;
+  }
+  const deserted = b.assignedSoldiers - soldiers;
+  b.assignedSoldiers = soldiers;
+  s.resources.or = Math.max(0, (s.resources.or||0) - soldiers * DEFENSE_SOLDIER_GOLD_COST);
+  if(deserted > 0){
+    toast(`⚠️ Solde d'or insuffisant : ${deserted} soldat(s) déserte(nt) la Caserne.`);
+  }
 }
 
 function resolveDefenseWave(s){
@@ -412,13 +446,11 @@ function resolveDefenseWave(s){
   s.justDefenseEvent = true;
 }
 
+// Actif dès le début de la partie (voir freshDefenseState) : le compte à
+// rebours tourne que la Caserne existe ou non. Si elle n'existe pas encore
+// (ou n'a aucun soldat), currentDefenseScore() vaut 0 et la vague est
+// automatiquement perdue à son arrivée.
 function tickDefense(s){
-  const b = s.menuBuildings.barracks;
-  if(!b || b.level<=0) return;
-  if(!s.defense.active){
-    s.defense.active = true;
-    s.defense.ticksUntilWave = DEFENSE_WAVE_INTERVAL_TICKS;
-  }
   s.defense.ticksUntilWave--;
   if(s.defense.ticksUntilWave <= 0){
     resolveDefenseWave(s);

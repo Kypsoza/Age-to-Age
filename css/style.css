@@ -146,19 +146,21 @@ h1,h2,h3{font-family:var(--font-display);margin:0;}
   padding:12px 12px 8px;background:var(--cream);
 }
 .resChip{
-  display:flex;align-items:center;justify-content:center;gap:5px;
-  background:var(--cream-light);border:1px solid var(--line-strong);border-radius:999px;
-  padding:7px 6px;box-shadow:0 2px 6px rgba(60,42,20,.1);position:relative;
+  display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;
+  grid-template-areas:"icon value" "delta delta";
+  align-items:center;justify-content:center;column-gap:5px;row-gap:2px;
+  background:var(--cream-light);border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  padding:8px 6px 7px;box-shadow:0 2px 6px rgba(60,42,20,.1);position:relative;
 }
-.resChip .ic{font-size:16px;}
-.resChip .resValue{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--ink);}
-.resChip .delta{font-size:8.5px;font-weight:800;position:absolute;bottom:-11px;left:0;right:0;text-align:center;}
+.resChip .ic{grid-area:icon;font-size:17px;}
+.resChip .resValue{grid-area:value;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--ink);}
+.resChip .delta{grid-area:delta;font-size:12px;font-weight:800;line-height:1.2;}
 .resChip .delta.pos{color:var(--secondary);}
 .resChip .delta.neg{color:var(--danger);}
 .resInfoBtn{
-  position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;
+  position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;
   border:1px solid var(--line-strong);background:var(--cream-light);color:var(--ink-dim);
-  font-size:9px;font-style:italic;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;padding:0;
+  font-size:10px;font-style:italic;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;padding:0;
 }
 
 #topbar{
@@ -183,7 +185,7 @@ h1,h2,h3{font-family:var(--font-display);margin:0;}
    HUD DÉFENSE
    --------------------------------------------------------------------- */
 #defenseHud{
-  position:absolute;top:128px;left:12px;z-index:60;
+  position:absolute;top:128px;left:12px;z-index:150;
   background:var(--cream-light);border:1px solid var(--line-strong);border-radius:var(--radius-sm);
   padding:8px 11px;min-width:130px;max-width:58%;
   font-family:var(--font-body);font-size:10px;color:var(--ink);
@@ -204,8 +206,8 @@ main{flex:1;position:relative;overflow:hidden;}
 .screen{position:absolute;inset:0;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .screen.active{display:block;}
 
-#screenMap{overflow:auto;background:var(--map-illustration);touch-action:pan-x pan-y;}
-#mapCanvas{position:relative;width:650px;height:1050px;margin:0 auto;}
+#screenMap{overflow:hidden;background:var(--map-illustration);display:flex;align-items:center;justify-content:center;touch-action:none;}
+#mapCanvas{position:relative;width:650px;height:1050px;flex-shrink:0;transform-origin:center center;}
 #mapSvg{position:absolute;inset:0;pointer-events:none;}
 #markerLayer{position:absolute;inset:0;pointer-events:none;}
 
@@ -290,10 +292,20 @@ main{flex:1;position:relative;overflow:hidden;}
 /* ---------------------------------------------------------------------
    NAV DU BAS
    --------------------------------------------------------------------- */
-#tabBar{flex-shrink:0;display:flex;background:var(--cream);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom));}
-#tabBar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--ink-dim);padding:8px 4px;border-radius:var(--radius-sm);font-family:var(--font-body);font-weight:800;font-size:9.5px;text-transform:uppercase;border-bottom:3px solid transparent;}
-#tabBar button .tabIcon{font-size:20px;}
-#tabBar button.active{color:var(--accent);background:var(--line);border-bottom-color:var(--accent);}
+#tabBar{
+  flex-shrink:0;display:flex;gap:6px;background:var(--cream);border-top:1px solid var(--line);
+  padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+#tabBar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  background:none;border:none;color:var(--ink-dim);
+  min-height:56px;padding:8px 4px;border-radius:var(--radius-md);
+  font-family:var(--font-body);font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.01em;
+  transition:background .15s,color .15s;
+}
+#tabBar button .tabIcon{font-size:22px;line-height:1;}
+#tabBar button.active{color:#fff;background:var(--accent);box-shadow:0 4px 10px rgba(193,87,58,.35);}
+#tabBar button:active{transform:scale(.96);}
 
 /* ---------------------------------------------------------------------
    BOTTOM SHEET

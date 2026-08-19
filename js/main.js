@@ -4,6 +4,23 @@
 function switchTab(tabId){
   document.querySelectorAll(".screen").forEach(s=> s.classList.toggle("active", s.id===tabId));
   document.querySelectorAll("#tabBar button").forEach(b=> b.classList.toggle("active", b.dataset.tab===tabId));
+  if(tabId === "screenMap") requestAnimationFrame(fitMapToScreen);
+}
+
+// La carte a une taille "physique" fixe (MAP_W×MAP_H, en pixels de jeu —
+// c'est le repère utilisé pour placer sites/bâtiments) mais doit toujours
+// tenir entièrement dans l'écran, sans scroll ni horizontal ni vertical :
+// on la réduit via CSS transform:scale() pour qu'elle occupe tout l'espace
+// disponible sans le dépasser, quelle que soit la taille de l'écran.
+function fitMapToScreen(){
+  const container = document.getElementById("screenMap");
+  const canvas = document.getElementById("mapCanvas");
+  if(!container || !canvas) return;
+  const availW = container.clientWidth;
+  const availH = container.clientHeight;
+  if(availW<=0 || availH<=0) return;
+  const scale = Math.min(availW/MAP_W, availH/MAP_H);
+  canvas.style.transform = `scale(${scale})`;
 }
 
 // =====================================================================
@@ -198,6 +215,9 @@ function init(){
   renderDifficultyScreen();
   startLoop();
 
+  window.addEventListener("resize", ()=>{ fitMapToScreen(); positionDefenseHud(); });
+  window.addEventListener("orientationchange", ()=> setTimeout(()=>{ fitMapToScreen(); positionDefenseHud(); }, 60));
+
   if(state){
     renderMapBackground();
     renderAll();
@@ -210,9 +230,22 @@ function init(){
   } else {
     showHomeScreen();
   }
+  requestAnimationFrame(()=>{ fitMapToScreen(); positionDefenseHud(); });
 
   setInterval(()=>{ if(state) saveGame(true); }, AUTOSAVE_MS);
   window.addEventListener("beforeunload", ()=>{ if(state) saveGame(true); });
+}
+
+// Le HUD Défense doit toujours rester visible, sur TOUS les onglets, juste
+// sous la topbar — sa position verticale est calculée dynamiquement (au
+// lieu d'une valeur fixe en dur) pour rester correcte même si la hauteur
+// de la topbar change (ex: texte d'income agrandi).
+function positionDefenseHud(){
+  const hud = document.getElementById("defenseHud");
+  const strip = document.getElementById("resourceStrip");
+  const bar = document.getElementById("topbar");
+  if(!hud || !strip || !bar) return;
+  hud.style.top = (strip.offsetHeight + bar.offsetHeight + 10) + "px";
 }
 
 init();

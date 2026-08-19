@@ -256,23 +256,41 @@ main{flex:1;position:relative;overflow:hidden;}
    --------------------------------------------------------------------- */
 .buildGrid{display:flex;flex-direction:column;gap:12px;}
 .buildTile{
-  position:relative;display:flex;gap:12px;align-items:flex-start;
+  position:relative;display:flex;gap:12px;align-items:center;
   background:var(--cream-light);border:1px solid var(--line);border-radius:var(--radius-md);
-  padding:12px 14px;box-shadow:0 2px 8px rgba(60,42,20,.08);
+  padding:12px 44px 12px 14px;box-shadow:0 2px 8px rgba(60,42,20,.08);
 }
 .buildTile .ic{flex-shrink:0;font-size:28px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--cream);border-radius:14px;border:1px solid var(--line);}
 .buildTile .tileBody{flex:1;min-width:0;}
-.buildTile .name{display:block;font-family:var(--font-display);font-weight:700;font-size:14.5px;color:var(--ink);margin-bottom:5px;}
+.buildTile .nameLine{display:flex;align-items:baseline;gap:7px;margin-bottom:5px;}
+.buildTile .name{display:block;font-family:var(--font-display);font-weight:700;font-size:14.5px;color:var(--ink);}
+.buildTile .levelTag{font-family:var(--font-body);font-weight:800;font-size:10.5px;color:var(--secondary);background:rgba(110,148,87,.12);padding:2px 7px;border-radius:8px;flex-shrink:0;}
 .buildTile .costRow{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--font-body);font-weight:800;font-size:12px;color:var(--ink);margin-bottom:4px;}
 .buildTile .costRow span.bad{color:var(--danger);}
 .buildTile .metaLine{font-size:10.5px;color:var(--ink-dim);font-weight:700;}
 .buildTile .lockLine{font-size:10.5px;color:var(--danger);font-weight:800;margin-top:2px;}
 .buildTile .tileInfoBtn{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:var(--slate);color:#fff;border:none;font-style:italic;font-family:Georgia,serif;font-size:11px;padding:0;}
-.buildTile .tileBadge{position:absolute;top:-6px;left:38px;background:var(--secondary);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;border:2px solid var(--cream-light);}
 .buildTile.built{border-color:var(--secondary);}
 .buildTile.constructing .ic{animation:pulseBuild 1.4s infinite;}
-.buildTile.locked{opacity:.55;background:var(--cream);}
-.buildTile.locked .ic{filter:grayscale(1);}
+.buildTile.locked{background:var(--cream);border-color:var(--line);}
+.buildTile.locked .ic{opacity:.5;filter:grayscale(1);}
+.buildTile.locked .name{color:var(--ink-dim);}
+
+/* Bouton d'action "incremental" : coloré et cliquable dès que le coût est
+   couvert, grisé/désactivé sinon — pas de confirmation, un tap = un achat. */
+.upgradeBtn{
+  flex-shrink:0;min-width:78px;
+  background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);
+  font-family:var(--font-display);font-weight:700;font-size:12px;text-transform:uppercase;
+  padding:11px 10px;box-shadow:0 4px 0 rgba(0,0,0,.15);
+  display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2;
+}
+.upgradeBtn:active{transform:translateY(3px);box-shadow:none;}
+.upgradeBtn:disabled{background:var(--line-strong);color:var(--ink-dim);box-shadow:none;}
+.upgradeBtn .btnCost{display:block;font-size:10px;font-weight:800;opacity:.9;margin-top:2px;}
+.upgradeBtn.buildingProgress{background:var(--gold);color:#fff;flex-direction:column;gap:1px;box-shadow:none;}
+.upgradeBtn.maxedBtn{background:var(--secondary);color:#fff;box-shadow:none;}
+.upgradeBtn.lockedBtn{background:var(--line);color:var(--ink-dim);box-shadow:none;font-size:16px;}
 
 .upgradeCard{background:var(--cream-light);border:1px solid var(--line);border-radius:var(--radius-md);padding:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(60,42,20,.08);}
 .upgradeCardHead{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-display);font-weight:700;font-size:13.5px;margin-bottom:8px;color:var(--ink);}
@@ -310,7 +328,7 @@ main{flex:1;position:relative;overflow:hidden;}
 /* ---------------------------------------------------------------------
    BOTTOM SHEET
    --------------------------------------------------------------------- */
-#sheetOverlay{position:absolute;inset:0;background:rgba(35,25,10,.45);z-index:90;display:none;}
+#sheetOverlay{position:absolute;inset:0;background:rgba(30,22,12,.65);z-index:90;display:none;}
 #sheetOverlay.show{display:block;}
 #bottomSheet{
   position:absolute;left:0;right:0;bottom:0;background:var(--cream-light);border-top:1px solid var(--line);
@@ -325,7 +343,7 @@ main{flex:1;position:relative;overflow:hidden;}
 /* ---------------------------------------------------------------------
    MODALE D'ACHAT / INFO — icône+titre centrés, coût, Annuler/Construire
    --------------------------------------------------------------------- */
-#infoModalOverlay{position:absolute;inset:0;background:rgba(35,25,10,.5);z-index:95;display:none;align-items:center;justify-content:center;padding:20px;}
+#infoModalOverlay{position:absolute;inset:0;background:rgba(30,22,12,.7);z-index:95;display:none;align-items:center;justify-content:center;padding:20px;}
 #infoModalOverlay.show{display:flex;}
 #infoModal{background:var(--cream-light);border:1px solid var(--line);border-radius:var(--radius-lg);padding:22px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.35);}
 .modalIcon{font-size:34px;margin-bottom:6px;}

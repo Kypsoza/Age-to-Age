@@ -53,7 +53,7 @@ function renderDefenseHud(){
     <div class="defenseHudTitle">${built ? MENU_BUILDINGS.barracks.icon : "🔒"} Défense — Vague n°${state.defense.assaultCount+1}</div>
     <div class="defenseHudBar"><div class="defenseHudFill${soon?' warn':''}" style="width:${pct}%;"></div></div>
     <div class="defenseHudRow"><span>${soon?'⚠️ ':'⏳ '}${state.defense.ticksUntilWave}s</span><span class="${ok?'ok':'bad'}">${score}/${threshold}</span></div>
-    ${built ? `<div class="defenseHudRow"><span>🗡️ Soldats</span><span>${b.assignedSoldiers||0}</span></div>` : `<div class="defenseHudRow" style="color:var(--bone-dim);font-size:10px;">Caserne non construite</div>`}
+    ${built ? `<div class="defenseHudRow"><span>🗡️ Soldats</span><span>${b.assignedSoldiers||0}</span></div>` : `<div class="defenseHudRow" style="color:var(--ink-dim);font-size:10px;">Caserne non construite</div>`}
   `;
 }
 
@@ -84,14 +84,14 @@ function openSiteSheet(type){
   currentSheet = {kind:"site", key:type};
   const site = siteByType(state, type);
   const def = RESEARCH_TYPES[type];
-  let html = `<h3>${site.discovered?def.revealedIcon:def.icon} ${def.label}</h3><p style="color:var(--bone-dim);font-size:13px;">${def.desc}</p>`;
+  let html = `<h3>${site.discovered?def.revealedIcon:def.icon} ${def.label}</h3><p style="color:var(--ink-dim);font-size:13px;">${def.desc}</p>`;
 
   if(site.discovered){
-    html += `<div style="color:var(--green-bright);font-size:13px;margin:8px 0;">✓ Zone découverte.</div>`;
+    html += `<div style="color:var(--secondary);font-size:13px;margin:8px 0;">✓ Zone découverte.</div>`;
     if(type !== "hotelville"){
       html += `<div class="invRow"><span>Habitants assignés</span><span>${site.assigned}/${gatherCapFor(state)}</span></div>
         <div style="display:flex;gap:10px;margin-top:14px;">
-          <button class="bigActionBtn" id="sheetMinus" style="background:var(--bg-panel-2);border-color:var(--line);">− Retirer</button>
+          <button class="bigActionBtn" id="sheetMinus" style="background:var(--cream);border:2px solid var(--line-strong);color:var(--ink);">− Retirer</button>
           <button class="bigActionBtn" id="sheetPlus">+ Assigner</button>
         </div>`;
     }
@@ -103,7 +103,7 @@ function openSiteSheet(type){
       <div class="invRow"><span>Temps restant</span><span>${site.assigned>0?Math.ceil(site.effortRemaining/site.assigned)+'s':'—'}</span></div>
       <div class="invRow"><span>Habitants assignés</span><span>${site.assigned}</span></div>
       <div style="display:flex;gap:10px;margin-top:14px;">
-        <button class="bigActionBtn" id="sheetMinus" style="background:var(--bg-panel-2);border-color:var(--line);">− Retirer</button>
+        <button class="bigActionBtn" id="sheetMinus" style="background:var(--cream);border:2px solid var(--line-strong);color:var(--ink);">− Retirer</button>
         <button class="bigActionBtn" id="sheetPlus">+ Assigner</button>
       </div>`;
   }
@@ -117,7 +117,7 @@ function openSiteSheet(type){
 
 function openStorageSheet(){
   currentSheet = {kind:"storage"};
-  let html = `<h3>📦 Entrepôt</h3><p style="color:var(--bone-dim);font-size:13px;">Capacité de stockage améliorable indépendamment par ressource.</p>`;
+  let html = `<h3>📦 Entrepôt</h3><p style="color:var(--ink-dim);font-size:13px;">Capacité de stockage améliorable indépendamment par ressource.</p>`;
   for(const resKey of STORABLE_RESOURCES){
     const status = getStorageStatus(state, resKey);
     const have = Math.floor(state.resources[resKey]||0);
@@ -138,23 +138,23 @@ function openBuildingSheet(key){
   const def = MENU_BUILDINGS[key];
   const b = state.menuBuildings[key];
   const status = getMenuBuildStatus(state, key);
-  let html = `<h3>${def.icon} ${def.name}</h3><p style="color:var(--bone-dim);font-size:13px;">${def.desc}</p>`;
+  let html = `<h3>${def.icon} ${def.name}</h3><p style="color:var(--ink-dim);font-size:13px;">${def.desc}</p>`;
 
   if(b.building){
     html += `<div class="invRow ok"><span>🚧 En construction</span><span>${b.buildTimeRemaining}s</span></div>`;
   } else {
     html += `<div class="invRow"><span>Niveau</span><span>${b.level}${def.maxLevel?"/"+def.maxLevel:""}</span></div>`;
     if(status.maxed){
-      html += `<div style="color:var(--green-bright);font-size:13px;margin-top:8px;">Niveau maximum atteint.</div>`;
+      html += `<div style="color:var(--secondary);font-size:13px;margin-top:8px;">Niveau maximum atteint.</div>`;
     } else {
-      html += `<div style="color:var(--bone-dim);font-size:11px;margin:8px 0 4px;">Niveau ${b.level+1} — ${buildTimeForLevel(state, b.level)}s :</div>`;
+      html += `<div style="color:var(--ink-dim);font-size:11px;margin:8px 0 4px;">Niveau ${b.level+1} — ${buildTimeForLevel(state, b.level)}s :</div>`;
       html += reqLinesHtml(status.lines,'upgradeReqLine');
       html += `<button class="bigActionBtn" id="sheetBuild">${b.level===0?'Construire':'Améliorer'}</button>`;
     }
     if(ALT_GATHER[key] && b.level > 0){
       html += `<div class="invRow" style="margin-top:10px;"><span>Habitants assignés</span><span>${b.assigned||0}/${gatherCapFor(state)}</span></div>
         <div style="display:flex;gap:10px;margin-top:10px;">
-          <button class="bigActionBtn" id="sheetAltMinus" style="background:var(--bg-panel-2);border-color:var(--line);">− Retirer</button>
+          <button class="bigActionBtn" id="sheetAltMinus" style="background:var(--cream);border:2px solid var(--line-strong);color:var(--ink);">− Retirer</button>
           <button class="bigActionBtn" id="sheetAltPlus">+ Assigner</button>
         </div>`;
     }
@@ -184,10 +184,10 @@ function renderDefenseSheetHtml(){
   return `<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px;">
     <div class="villageTitle" style="font-size:14px;">🛡️ Défense</div>
     <div class="invRow"><span>Soldats assignés</span><span>${b.assignedSoldiers||0}</span></div>
-    <div style="color:var(--bone-dim);font-size:11px;margin:4px 0 8px;">Assigne/retire des soldats depuis les boutons ➖➕ sous l'icône de la Caserne, sur la carte.</div>
+    <div style="color:var(--ink-dim);font-size:11px;margin:4px 0 8px;">Assigne/retire des soldats depuis les boutons ➖➕ sous l'icône de la Caserne, sur la carte.</div>
     <div class="invRow ${ok?'ok':'bad'}"><span>Score de Défense</span><span>${score}/${threshold}</span></div>
     <div class="invRow"><span>Vague n°${waveNumber}</span><span>${state.defense.ticksUntilWave}s</span></div>
-    <div style="color:var(--bone-dim);font-size:11.5px;margin-top:6px;line-height:1.5;">
+    <div style="color:var(--ink-dim);font-size:11.5px;margin-top:6px;line-height:1.5;">
       Défense insuffisante à l'arrivée de la vague = -${Math.round(state.rules.defenseLossRatio*100)}% de chaque ressource stockée. Chaque soldat coûte aussi ${state.rules.defenseSoldierGoldCost} 🪙/s en continu.
     </div>
   </div>`;
@@ -201,7 +201,9 @@ function renderBuildScreen(){
   const hdv = siteByType(state, "hotelville");
   const showVillage = hdv && hdv.discovered && !state.villageFounded;
   if(showVillage){
-    const lines = Object.entries(scaledVillageCost(state)).map(([res,amt])=>{
+    const costObj = scaledVillageCost(state);
+    const affordable = Object.entries(costObj).every(([res,amt])=> (state.resources[res]||0) >= amt);
+    const lines = Object.entries(costObj).map(([res,amt])=>{
       const have = Math.floor(state.resources[res]||0);
       return `<div class="invRow ${have>=amt?'ok':'bad'}"><span>${iconFor(res)} ${have}/${amt}</span></div>`;
     }).join("");
@@ -209,7 +211,7 @@ function renderBuildScreen(){
       <div class="villageTitle">🏘️ Fonder le Village</div>
       <div class="villageDesc">L'emplacement de l'Hôtel de Ville a été retrouvé.</div>
       ${lines}
-      <button class="bigActionBtn" id="btnFoundVillageMobile">Fonder le Village</button>
+      <button class="bigActionBtn" id="btnFoundVillageMobile" ${affordable?"":"disabled"}>Fonder le Village</button>
     </div>`;
     document.getElementById("btnFoundVillageMobile").onclick = ()=>{ foundVillage(state); renderAll(); };
   } else {
@@ -218,7 +220,7 @@ function renderBuildScreen(){
 
   const grid = document.getElementById("buildGrid");
   if(!state.villageFounded){
-    grid.innerHTML = `<div style="grid-column:1/-1;color:var(--bone-dim);font-size:13px;text-align:center;padding:20px;">Fonde d'abord le Village pour débloquer la construction.</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;color:var(--ink-dim);font-size:13px;text-align:center;padding:20px;">Fonde d'abord le Village pour débloquer la construction.</div>`;
     return;
   }
   grid.innerHTML = "";
@@ -228,53 +230,65 @@ function renderBuildScreen(){
     const built = b.level > 0;
     const status = getMenuBuildStatus(state, key);
     const locked = status.locked && !built;
-    const unaffordable = !built && !b.building && !status.locked && !status.maxed && !status.lines.every(l=>l.ok);
+    const affordable = !locked && !status.maxed && !b.building && status.lines.every(l=>l.ok);
 
     const tile = document.createElement("div");
     tile.className = "buildTile"
       + (locked ? " locked" : "")
       + (b.building ? " constructing" : "")
-      + (built && !b.building ? " built" : "")
-      + (unaffordable ? " unaffordable" : "");
+      + (built && !b.building ? " built" : "");
     tile.dataset.buildKey = key;
 
-    let badge = "";
-    if(b.building) badge = `<span class="tileBadge">🚧</span>`;
-    else if(built) badge = `<span class="tileBadge">✓</span>`;
-
-    let costRow = "";
-    let metaLine = "";
+    let costRow = "", metaLine = "", actionHtml = "";
     if(b.building){
       metaLine = `🚧 En construction — ${b.buildTimeRemaining}s`;
+      actionHtml = `<div class="upgradeBtn buildingProgress"><span>🚧</span><span class="btnCost">${b.buildTimeRemaining}s</span></div>`;
     } else if(status.maxed){
-      costRow = `<span style="color:var(--secondary);">Niveau maximum</span>`;
       metaLine = `Niveau ${b.level}${def.maxLevel?"/"+def.maxLevel:""}`;
-    } else if(!locked){
-      costRow = status.lines.map(l=>`<span class="${l.ok?'':'bad'}">${l.label}</span>`).join("");
-      metaLine = `Niveau Max: ${def.maxLevel?def.maxLevel:"Illimité"}${built?" · Niv."+b.level:""}`;
-    } else {
+      actionHtml = `<div class="upgradeBtn maxedBtn">MAX</div>`;
+    } else if(locked){
       metaLine = `Niveau Max: ${def.maxLevel?def.maxLevel:"Illimité"}`;
+      actionHtml = `<div class="upgradeBtn lockedBtn">🔒</div>`;
+    } else {
+      costRow = status.lines.map(l=>`<span class="${l.ok?'':'bad'}">${l.label}</span>`).join("");
+      metaLine = `Max: ${def.maxLevel?def.maxLevel:"Illimité"}${built?" · Niv."+b.level:""}`;
+      const label = built ? "Améliorer" : "Construire";
+      actionHtml = `<button class="upgradeBtn" data-build-action="${key}" ${affordable?"":"disabled"}>${label}</button>`;
     }
 
     tile.innerHTML = `
-      <button class="tileInfoBtn" data-build-info="${key}">i</button>
-      ${badge}
       <span class="ic">${locked ? "🔒" : def.icon}</span>
       <div class="tileBody">
-        <span class="name">${def.name}</span>
+        <div class="nameLine"><span class="name">${def.name}</span>${built?`<span class="levelTag">Nv.${b.level}</span>`:""}</div>
         <div class="costRow">${costRow}</div>
         <div class="metaLine">${metaLine}</div>
-        ${locked ? `<div class="lockLine">Cadenas : ${status.lines.filter(l=>!l.ok).map(l=>l.label).join(", ")}</div>` : ""}
+        ${locked ? `<div class="lockLine">Requiert : ${status.lines.filter(l=>!l.ok).map(l=>l.label).join(", ")}</div>` : ""}
       </div>
+      ${actionHtml}
+      <button class="tileInfoBtn" data-build-info="${key}">i</button>
     `;
-    tile.onclick = ()=> openBuildModal(key);
     grid.appendChild(tile);
   }
+
+  // Bouton d'action = achat DIRECT (comme un upgrade d'incremental) : pas
+  // de modale de confirmation, le bouton est grisé/désactivé tant que les
+  // ressources manquent et devient cliquable dès qu'elles suffisent.
+  grid.querySelectorAll("[data-build-action]").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      buildMenuBuilding(state, btn.dataset.buildAction);
+      renderAll();
+    };
+  });
+  // Le bouton "i" reste un aperçu en lecture seule (description complète).
+  grid.querySelectorAll("[data-build-info]").forEach(btn=>{
+    btn.onclick = (e)=>{ e.stopPropagation(); openBuildModal(btn.dataset.buildInfo); };
+  });
 }
 
-// Modale de construction/amélioration : icône+nom, description, coût,
-// boutons "Annuler" / "Construire" (ou "Améliorer") — c'est ici, et
-// uniquement ici, que l'achat d'un bâtiment est confirmé.
+// Modale d'information (lecture seule) sur un bâtiment : description
+// complète + coût actuel. L'achat se fait directement depuis le bouton de
+// la ligne, pas depuis cette modale (un seul bouton "Fermer").
 function openBuildModal(key){
   const def = MENU_BUILDINGS[key];
   const b = state.menuBuildings[key];
@@ -283,7 +297,7 @@ function openBuildModal(key){
   if(b.level > 0){
     bodyHtml += `<br><br><b>Niveau actuel :</b> ${b.level}${def.maxLevel?"/"+def.maxLevel:" (illimité)"}`;
   }
-  let costHtml = "", primaryLabel = null, onPrimary = null;
+  let costHtml = "";
   if(b.building){
     costHtml = `<span>🚧 En construction : ${b.buildTimeRemaining}s restantes</span>`;
   } else if(status.maxed){
@@ -292,12 +306,8 @@ function openBuildModal(key){
     costHtml = status.lines.map(l=>`<span class="${l.ok?'':'bad'}">${l.label}</span>`).join("");
   } else {
     costHtml = costLineHtml(status.lines);
-    if(status.lines.every(l=>l.ok)){
-      primaryLabel = b.level===0 ? "Construire" : "Améliorer";
-      onPrimary = ()=>{ buildMenuBuilding(state, key); renderAll(); hideInfoModal(); };
-    }
   }
-  openModal({ icon: def.icon, title: def.name, bodyHtml, costHtml, primaryLabel, onPrimary, secondaryLabel:"Annuler" });
+  openModal({ icon: def.icon, title: def.name, bodyHtml, costHtml, secondaryLabel:"Fermer" });
 }
 
 // =====================================================================
@@ -309,12 +319,13 @@ function renderUpgradesScreen(){
   for(const resKey of STORABLE_RESOURCES){
     const status = getStorageStatus(state, resKey);
     const have = Math.floor(state.resources[resKey]||0);
+    const affordable = status.lines.every(l=>l.ok);
     const card = document.createElement("div");
     card.className = "upgradeCard";
     card.innerHTML = `
       <div class="upgradeCardHead"><span>${iconFor(resKey)} ${resKey[0].toUpperCase()+resKey.slice(1)}</span><span class="tierBadge">${have}/${status.cap}</span></div>
       ${reqLinesHtml(status.lines,'upgradeReqLine')}
-      <button class="bigActionBtn" data-storage="${resKey}">Agrandir → ${status.nextCap}</button>`;
+      <button class="bigActionBtn" data-storage="${resKey}" ${affordable?"":"disabled"}>Agrandir → ${status.nextCap}</button>`;
     storageBox.appendChild(card);
   }
   storageBox.querySelectorAll("[data-storage]").forEach(btn=>{
@@ -330,12 +341,13 @@ function renderUpgradesScreen(){
     card.className = "upgradeCard";
     let body = `<div class="upgradeCardHead"><span>${iconFor(resKey)} ${def.label}</span><span class="tierBadge">Palier ${status.currentTier}/${status.maxTiers}</span></div>`;
     if(status.maxTiers === 0){
-      body += `<div style="color:var(--bone-dim);font-size:12px;">Construis ${MENU_BUILDINGS[def.buildingKey].name} pour débloquer.</div>`;
+      body += `<div style="color:var(--ink-dim);font-size:12px;">Construis ${MENU_BUILDINGS[def.buildingKey].name} pour débloquer.</div>`;
     } else if(!status.available){
-      body += `<div style="color:var(--bone-dim);font-size:12px;">Améliore ${MENU_BUILDINGS[def.buildingKey].name} pour un palier de plus.</div>`;
+      body += `<div style="color:var(--ink-dim);font-size:12px;">Améliore ${MENU_BUILDINGS[def.buildingKey].name} pour un palier de plus.</div>`;
     } else {
+      const affordable = status.lines.every(l=>l.ok);
       body += reqLinesHtml(status.lines,'upgradeReqLine');
-      body += `<button class="bigActionBtn" data-upgrade="${resKey}">Débloquer (+100% income)</button>`;
+      body += `<button class="bigActionBtn" data-upgrade="${resKey}" ${affordable?"":"disabled"}>Débloquer (+100% income)</button>`;
     }
     card.innerHTML = body;
     upgradeBox.appendChild(card);
@@ -360,7 +372,7 @@ function renderPopScreen(){
   renderResetButton();
   const recruitBox = document.getElementById("recruitCardMobile");
   if(state.populationReserve <= 0){
-    recruitBox.innerHTML = `<div style="color:var(--bone-dim);font-size:13px;margin-top:16px;">Aucun habitant en réserve — construis ou améliore une Maison.</div>`;
+    recruitBox.innerHTML = `<div style="color:var(--ink-dim);font-size:13px;margin-top:16px;">Aucun habitant en réserve — construis ou améliore une Maison.</div>`;
     return;
   }
   const cost = recruitCost(state);
@@ -369,7 +381,7 @@ function renderPopScreen(){
     <div class="villageTitle">👥 Recruter</div>
     <div class="villageDesc">${state.populationReserve} en réserve, prêt(s) à intégrer le village.</div>
     <div class="invRow ${have>=cost?'ok':'bad'}"><span>${iconFor('nourriture')} ${have}/${cost}</span></div>
-    <button class="bigActionBtn" id="btnRecruitMobile">Recruter (${cost} 🌾)</button>
+    <button class="bigActionBtn" id="btnRecruitMobile" ${have>=cost?"":"disabled"}>Recruter (${cost} 🌾)</button>
   </div>`;
   document.getElementById("btnRecruitMobile").onclick = ()=>{ recruitHabitant(state); renderAll(); };
 }
@@ -379,8 +391,10 @@ function renderResetButton(){
   const btn = document.createElement("button");
   btn.className = "bigActionBtn";
   btn.style.marginTop = "20px";
-  btn.style.background = "var(--bg-panel-2)";
-  btn.style.borderColor = "var(--alert)";
+  btn.style.background = "var(--cream)";
+  btn.style.border = "2px solid var(--danger)";
+  btn.style.color = "var(--danger)";
+  btn.style.boxShadow = "none";
   btn.textContent = "🗑️ Nouvelle partie";
   btn.onclick = ()=>{
     if(btn.dataset.armed === "1"){

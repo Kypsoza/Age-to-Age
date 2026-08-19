@@ -282,5 +282,13 @@ function updateTickVisuals(){
     }
   }
   renderTopStrip();
+  // L'écran Construire et le panneau Améliorations doivent refléter les
+  // ressources en temps réel (coûts qui passent au vert/rouge, bouton qui
+  // se dégrise dès que c'est abordable) — on les reconstruit à chaque
+  // tick, pas seulement sur un gros événement (découverte/fin de
+  // construction). Coût négligeable : quelques éléments DOM, 1×/seconde.
+  renderBuildScreen();
+  renderUpgradesScreen();
+  renderPopScreen();
   refreshOpenSheet();
 }

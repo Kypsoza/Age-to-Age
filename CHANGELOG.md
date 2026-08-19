@@ -1,27 +1,29 @@
 # 📓 CHANGELOG — Age to Age
 
-Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, améliorations. Deux parties : l'état actuel du contenu, puis l'historique des versions.
+Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, améliorations.
 
 ---
 
 ## 🎮 État actuel du jeu (contenu)
 
 ### Boucle de jeu
-- **Genèse** : 5 survivants, aucune ressource au départ (50 nourriture en réserve). 4 sites de recherche (Nourriture/Bois/Or/Emplacement Hôtel de Ville) + 1 Entrepôt, positions aléatoires à chaque partie sur une carte procédurale (lac, forêts, rochers, sans grille visible).
-- **Recherche** : chaque site caché derrière un bouton "🔍 Lancer la recherche" nommé. Une fois lancée, assignation de plusieurs habitants en parallèle (barre de progression + chrono), coût en habitants uniquement (temporaires, libérés à la fin). Seule Nourriture est visible au départ ; sa découverte révèle Bois/Or/Emplacement HDV. La Pierre reste cachée jusqu'à la fondation du Village.
-- **Récolte manuelle** : une fois une zone découverte, on y assigne des habitants (➖➕) qui récoltent en continu (0,4/tick/habitant), plafonné par le niveau de l'Hôtel de Ville (3 de base, +5/niveau).
-- **Village** : dès l'Emplacement HDV découvert, panneau de fondation (30 bois + 15 or) → débloque le menu de construction.
-- **Bâtiments** (menu du bas, dépendances) : Hôtel de Ville (premier, débloque tout) → Maison + Forge → Pavillon de Chasse / Salle du Trésor → Cabane de Pêche → Moulin, et Maison niv.2 → Caserne. Construction chronométrée (18s + 9s/niveau), tous les coûts mélangent Bois+Pierre+Or (×1,9/niveau) pour forcer une répartition stratégique des habitants entre les zones de récolte.
-- **Pavillon de Chasse / Cabane de Pêche** : deviennent de vrais points de récolte de nourriture sur la carte (×1,5 et ×2 le rendement de base).
-- **Forge / Moulin / Salle du Trésor** : chaque niveau débloque un palier d'amélioration d'income (+100% cumulatif) sur Bois+Pierre / Nourriture / Or respectivement, achetable indépendamment — le coût d'un palier porte toujours sur les *autres* ressources que celle boostée.
-- **Entrepôt** : plafond de stockage indépendant par ressource — **Bois, Pierre, Nourriture et Or** — paliers de 1000 (1000 → 2000 → 3000...), coût mixé ×1,7/palier, améliorable séparément pour chaque ressource.
-- **Population** : la Maison ajoute des places en réserve (+5/niveau), pas des habitants actifs. Le recrutement (bouton dédié) coûte de la nourriture, coût croissant (×1,4/recrutement). Tous les habitants actifs consomment de la nourriture en permanence, qu'ils travaillent ou non.
-- **Cycle temporel** : jours/saisons, cycle jour/nuit présent en interne mais voile visuel désactivé pour l'instant.
-- **Défense (Caserne)** : une fois la Caserne construite (Maison niv.2 requis), assignation de soldats (8 Défense/soldat) et vagues d'assaut automatiques toutes les 90s, seuils croissants 50→65→85→110→145 puis boucle sur 145. Défense insuffisante = -25% de tous les stocks.
+- **Difficulté** : choix entre 4 paliers (Facile/Moyen/Difficile/Très difficile) à chaque nouvelle partie, qui fixent pour toute la partie : chrono des vagues, seuils/coût de la Défense, multiplicateurs de coût de construction et de vitesse de récolte, temps de recherche/construction, population et nourriture de départ, coût de recrutement, sévérité de la famine. Détail complet dans `js/config.js` (objet `DIFFICULTIES`).
+- **Genèse** : survivants et réserve de nourriture de départ variables selon la difficulté (5-6 survivants, 30-70 nourriture). 4 sites de recherche (Nourriture/Bois/Or/Emplacement Hôtel de Ville) + 1 Entrepôt, positions aléatoires à chaque partie sur une carte procédurale (lac, forêts, rochers, sans grille visible).
+- **Recherche** : chaque site caché derrière un bouton "🔍 Lancer la recherche" nommé. Une fois lancée, assignation de plusieurs habitants en parallèle, coût en habitants uniquement. Seule Nourriture est visible au départ ; sa découverte révèle Bois/Or/Emplacement HDV. La Pierre reste cachée jusqu'à la fondation du Village.
+- **Récolte manuelle** : une fois une zone découverte, on y assigne des habitants (➖➕) qui récoltent en continu, plafonné par le niveau de l'Hôtel de Ville.
+- **Village** : dès l'Emplacement HDV découvert, panneau de fondation → débloque le menu de construction.
+- **Bâtiments** : Hôtel de Ville → Maison + Forge → Pavillon de Chasse / Salle du Trésor → Cabane de Pêche → Moulin, et Maison niv.2 → Caserne. Construction chronométrée, tous les coûts mélangent Bois+Pierre+Or.
+- **Forge / Moulin / Salle du Trésor** : améliorations d'income (+100% cumulatif par palier).
+- **Entrepôt** : plafond de stockage indépendant par ressource, améliorable.
+- **Population** : la Maison ajoute des places en réserve. Le recrutement coûte de la nourriture, coût croissant selon la difficulté.
+- **Famine** : si la nourriture reste à 0 au-delà d'un délai de grâce, la population décline. Peut mener à l'écran de Défaite.
+- **Cycle temporel** : jours/saisons, cycle jour/nuit interne.
+- **Défense (Caserne)** : assignation de soldats uniquement via les boutons sur la carte, coût en or continu (désertion si insuffisant). Vagues d'assaut automatiques, seuils et pénalités modulés par la difficulté. HUD dédié en haut à gauche.
+- **Écran de Défaite** : population à 0 → écran bloquant, bouton "Nouvelle partie".
 
 ### Plateformes
 - **PC** (`index.html`) : carte 1100×680, panneau latéral droit, menu de construction en bas, tooltips au survol.
-- **Mobile** (`mobile/index.html`) : détection auto (écran tactile < 820px), carte portrait 650×1050 déplaçable au doigt, 4 onglets (Carte/Construire/Améliorations/Habitants), fiches coulissantes au tap, boutons "i" pour les infos. Réutilise state.js/simulation.js/storage.js du PC.
+- **Mobile** (`mobile/index.html`) : détection auto (écran tactile < 820px), carte portrait, 4 onglets, fiches coulissantes, boutons "i" pour les infos.
 
 ### Non encore implémenté (roadmap)
 - Crises majeures de l'Ère 1 (Mégafaune, Vague de Froid, Épuisement Local, Pourrissement) — Phase 9
@@ -31,94 +33,19 @@ Ce fichier est mis à jour à chaque évolution du jeu : ajouts, corrections, am
 
 ---
 
-## 🗂️ Historique des versions
+## 🗂️ Historique des versions (résumé)
 
-### v0.9.1 — Rééquilibrage Défense (valeur/soldat + délai 1ère vague)
-**Ajustements**
-- Score de Défense par soldat porté de 8 à **25** : les seuils des vagues [50,65,85,110,145] ne demandent plus que 2/3/4/5/6 soldats (au lieu de 7 à 19), largement atteignable avec la population disponible à ce stade de la partie
-- Délai avant la 1ère vague automatique porté de 4 à **10 minutes** (600 ticks), calibré avec un bot de simulation jouant "efficacement" (recherche/récolte + construction Hôtel de Ville→Maison×2→Caserne dès que possible) : ce bot fonde le Village en ~1,5 min et termine la Caserne en ~5 min — 10 minutes laisse une marge confortable à un joueur normal pour tout construire ET recruter/assigner quelques soldats avant le 1er assaut
+### v0.11 — Refonte graphique complète de l'UI mobile
+- Nouveau design system par variables CSS, thème "Ère 1 — Genèse" (tons organiques : beige papyrus, vert sauge, terre cuite, ardoise), architecture prête pour les 5 ères suivantes (`.era-1` à `.era-6`)
+- Topbar deux lignes, bottom sheet et modales redessinées façon "fiche crème à coins arrondis", cartes de construction avec vignette/coût/verrou, navigation basse à 4 onglets restylée
 
-### v0.9 — Phase 8 : Défense & Assauts (Caserne)
-**Ajouts**
-- La Caserne (une fois construite, maison niv.2 requis) permet d'assigner des habitants comme soldats **uniquement via les boutons ➖➕ sur la carte, sous l'icône de la Caserne** (pas depuis le panneau de droite / la fiche mobile, qui n'affichent que l'état), chaque soldat apportant 8 points de Défense
-- Chaque soldat coûte en continu de l'Or (0,2/s), en plus de la nourriture déjà consommée par tout habitant actif ; si le stock d'Or ne suffit plus, les soldats en surnombre désertent automatiquement un par un
-- La consommation d'Or par les soldats apparaît dans le tooltip de la pastille Or (topbar PC) et dans la modale "i" Or (mobile), au même titre que la consommation de nourriture par la population
-- **Première vague automatique 4 minutes après le début de la partie**, indépendamment de la construction de la Caserne (si elle n'existe pas encore, la Défense vaut 0 et la vague est perdue). Vagues suivantes toutes les 90s, seuils 50→65→85→110→145 puis boucle sur 145
-- Défense suffisante à l'arrivée de la vague = vague repoussée sans perte. Insuffisante = -25% de chaque ressource stockée (Bois/Pierre/Nourriture/Or)
-- **HUD Défense fixe en haut à gauche de l'écran** (PC et mobile), visible dès le lancement de la partie : barre de progression + compte à rebours avant la prochaine vague (passe en rouge dans les 15 dernières secondes), score de Défense courant vs seuil, nombre de soldats assignés
-- Panneau dédié (fiche Caserne, PC et mobile) : affichage du nombre de soldats, du score de Défense vs seuil, du temps restant — en lecture seule, avec un renvoi explicite vers la carte pour l'assignation
-
-**Corrections**
-- BUG-P3-003 (rafraîchissement cassé en vitesse ×3) vérifié et confirmé déjà en place : le reset de `justDiscovered`/`justCompleted` (et désormais aussi `justDefenseEvent`) se fait bien dans la boucle du timer (`main.js`, PC et mobile) avant la rafale de `simTick()`, jamais à l'intérieur de `simTick()`
-- BUG-P3-004 (boutons hors cadre en bord de carte) : marges de `pickSpot()`/`pickSpotOnWater()` (`js/state.js`, partagé PC+mobile) portées de 60/30px à 100px comme prévu — elles n'avaient en réalité pas encore été appliquées dans les fichiers reçus (60px constaté), c'est corrigé dans cette version
-
-### v0.8 — Stockage de l'or, paliers agrandis, panneau dynamique
-**Ajouts**
-- L'Or a maintenant lui aussi un plafond de stockage améliorable (coût en bois+pierre), il n'est plus illimité
-
-**Améliorations**
-- Paliers d'Entrepôt fortement agrandis : 1000 → 2000 → 3000 → 4000... (au lieu de 80 → 140 → 200...), sur toutes les ressources dont l'Or
-
-**Corrections**
-- Panneau de droite (PC) et fiche du bas (mobile) : les prérequis (have/need) restaient figés tant qu'on ne cliquait pas ailleurs, même en gardant le panneau ouvert pendant que les ressources évoluaient. Ils se rafraîchissent maintenant en continu, comme le reste de l'interface.
-
+### v0.10 — Système de difficulté (4 paliers) + Famine + Écran de Défaite
+### v0.9.1 / v0.9 — Phase 8 : Défense & Assauts (Caserne), rééquilibrage
+### v0.8 — Stockage de l'or, paliers agrandis
 ### v0.7 — Équilibrage stratégique & tooltips
-**Améliorations**
-- Tous les coûts (constructions ET améliorations d'income ET paliers de stockage) mélangent désormais Bois/Pierre/Or — impossible de tout financer avec une seule ressource, il faut répartir ses habitants sur plusieurs zones pour progresser
-- Chaque amélioration d'income coûte les *autres* ressources que celle qu'elle boost (améliorer le Bois coûte Pierre+Or, etc.)
-- Multiplicateurs de coût resserrés (bâtiments ×1,9/niveau, améliorations ×1,8/palier, stockage ×1,7/palier) pour empêcher d'acheter plusieurs paliers d'un coup
-
-**Corrections**
-- Tooltips qui sortaient de l'écran sur les bords : nouvelle fonction de positionnement qui les garde toujours visibles (bascule au-dessus/en-dessous, bridage horizontal)
-
 ### v0.6 — Version mobile dédiée
-**Ajouts**
-- Dossier `mobile/` complet : détection automatique, carte portrait, 4 onglets, fiches coulissantes, modales d'info tactiles
-- Redirection automatique PC → mobile selon la taille d'écran (`?desktop=1` pour forcer le PC)
-
 ### v0.5 — Entrepôt & Stockage (Phase 2)
-**Ajouts**
-- Plafond de stockage indépendant par ressource, améliorable via un panneau dédié sur l'Entrepôt
-- Or laissé illimité (monnaie virtuelle)
-
-**Corrections**
-- Tooltip de la flèche ▲ sur la carte : affichait "Construit" au lieu du coût du niveau suivant
-- Pastille Pierre invisible dans le topbar (oubliée masquée en dur après son ajout)
-- Consommation de nourriture rendue permanente (tous les habitants consomment en continu, plus seulement quand une source est activement récoltée)
-- Réserve de nourriture de départ (50) ajoutée pour amorcer la partie
-
 ### v0.4 — Pierre, récolte alternative, recrutement, améliorations
-**Ajouts**
-- Pierre ajoutée comme 5ᵉ ressource (débloquée à la fondation du Village)
-- Pavillon de Chasse / Cabane de Pêche transformés en vrais points de récolte
-- Panneau d'améliorations d'income (Forge/Moulin/Trésor), paliers cumulatifs
-- Système de recrutement séparé de la Maison (réserve + coût en nourriture croissant)
-- Coûts de construction mixés (bois/pierre/or) pour forcer la réallocation d'habitants
-
-**Corrections**
-- `render-buildbar.js` avait disparu du dépôt de travail — recréé
-- Menu du bas non rafraîchi à la fin d'une construction (icône 🚧 figée, reclique relançait une construction)
-- Chevauchement du marqueur Hôtel de Ville avec le site de recherche découvert
-
 ### v0.3 — Village, Hôtel de Ville, dépendances (Phase 3)
-**Ajouts**
-- Panneau de fondation du Village, menu de construction avec cadenas et dépendances entre bâtiments
-- Construction chronométrée avec barre de progression (carte + menu)
-- Plafond d'habitants par zone lié au niveau de l'Hôtel de Ville
-
-**Corrections**
-- Maison ne créditait pas les habitants (effet non câblé)
-- Crash au chargement d'une ancienne sauvegarde incompatible (bouton "Nouvelle partie" bloqué en conséquence)
-
 ### v0.2 — Refonte : Genèse & Recherche (Phase 1)
-**Ajouts**
-- Nouveau lore (boucle temporelle) et nouvelle boucle de démarrage : recherche de zones, découverte progressive, entrepôt initial
-- Carte procédurale organique (SVG : lac, forêts, rochers), sans grille, sans cases cliquables
-- Boutons de lancement de recherche nommés par zone
-
-**Corrections**
-- Scintillement des boutons ➖➕ (rendu complet de la carte à chaque tick) → rendu léger séparé du rendu structurel
-
 ### v0.1 — Milestone 1 (ancien système, archivé)
-- Bâtiments à emplacement fixe sur grille, population automatique, économie de base
-- Remplacé par la refonte v0.2 ; conservé pour historique dans le classeur QA (onglet ARCHIVE)

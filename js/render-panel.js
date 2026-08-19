@@ -38,7 +38,7 @@ function renderUpgradesPanel(){
   let html = `<div class="villageTitle" style="margin-bottom:8px;">⚙️ Améliorations</div>`;
   for(const [resKey, def] of Object.entries(UPGRADES)){
     const buildingLevel = state.menuBuildings[def.buildingKey].level;
-    if(buildingLevel <= 0) continue; // bâtiment pas encore construit : rien à afficher pour cette ressource
+    if(buildingLevel <= 0) continue;
     const status = getUpgradeStatus(state, resKey);
     html += `<div class="upgradeRow">
       <div class="upgradeRowHead">
@@ -76,7 +76,7 @@ function renderVillagePanel(){
   }
   panel.classList.remove("hidden");
 
-  const lines = Object.entries(VILLAGE_COST).map(([res,amt])=>{
+  const lines = Object.entries(scaledVillageCost(state)).map(([res,amt])=>{
     const have = Math.floor(state.resources[res]||0);
     return `<div class="invRow ${have>=amt?'ok':'bad'}"><span>${iconFor(res)} ${have}/${amt}</span></div>`;
   }).join("");
@@ -168,13 +168,10 @@ function renderInfoPanel(){
   }
 
   if(sel.kind==='tile'){
-    // conservé pour compatibilité mais plus jamais déclenché : la carte
-    // procédurale n'a plus de cases cliquables, seuls les marqueurs le sont.
     panel.innerHTML = "";
     return;
   }
 
-  // site
   const site = siteByType(state, sel.type);
   const def = RESEARCH_TYPES[site.type];
   let html = `<div><b>${site.discovered ? def.revealedIcon : def.icon} ${def.label}</b></div>
@@ -221,11 +218,11 @@ function renderDefensePanelHtml(){
   let html = `<hr style="border-color:var(--line);margin:10px 0;">
     <div class="villageTitle" style="font-size:12px;">🛡️ Défense</div>
     <div class="invRow"><span>Soldats assignés</span><span>${b.assignedSoldiers||0}</span></div>
-    <div style="color:var(--bone-dim);font-size:10.5px;margin:4px 0 8px;">Assigne/retire des soldats depuis les boutons ➖➕ sous l'icône de la Caserne, sur la carte.</div>
+    <div style="color:var(--bone-dim);font-size:11px;margin:4px 0 8px;">Assigne/retire des soldats depuis les boutons ➖➕ sous l'icône de la Caserne, sur la carte.</div>
     <div class="invRow ${ok?'ok':'bad'}"><span>Score de Défense</span><span>${score}/${threshold}</span></div>
     <div class="invRow"><span>Vague n°${waveNumber}</span><span>${state.defense.ticksUntilWave}s</span></div>
     <div style="color:var(--bone-dim);font-size:10.5px;margin-top:4px;line-height:1.5;">
-      Si la Défense est insuffisante à l'arrivée de la vague, la tribu perd 25% de chaque ressource stockée. Chaque soldat coûte aussi ${DEFENSE_SOLDIER_GOLD_COST} ✨/s.
+      Si la Défense est insuffisante à l'arrivée de la vague, la tribu perd ${Math.round(state.rules.defenseLossRatio*100)}% de chaque ressource stockée. Chaque soldat coûte aussi ${state.rules.defenseSoldierGoldCost} ✨/s.
     </div>`;
   return html;
 }

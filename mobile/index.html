@@ -5,31 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Age to Age — Mobile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="era-1">
 <div id="app">
 
+  <div id="difficultyScreen" class="overlayScreen">
+    <div class="overlayCard">
+      <button id="eraDemoBtn" title="Prévisualiser une autre Ère (démo visuelle uniquement)">🎨</button>
+      <h2>Age to Age</h2>
+      <p class="overlaySub">Choisis ta difficulté avant de commencer.</p>
+      <div id="difficultyGrid"></div>
+    </div>
+  </div>
+
+  <div id="defeatScreen" class="overlayScreen hidden">
+    <div class="overlayCard">
+      <h2 style="text-transform:none;">💀 Défaite</h2>
+      <p class="overlaySub" id="defeatMessage">La tribu s'est éteinte.</p>
+      <button id="btnDefeatRestart" class="bigActionBtn" style="margin-top:6px;">Nouvelle partie</button>
+    </div>
+  </div>
+
+  <div id="resourceStrip">
+    <div class="resChip" id="chipBois">
+      <span class="ic">🪵</span>
+      <span class="resValue" id="resBois">0</span>
+      <span class="resMeta"><span class="delta" id="deltaBois"></span><button class="resInfoBtn" data-info="bois">i</button></span>
+    </div>
+    <div class="resChip" id="chipPierre">
+      <span class="ic">🪨</span>
+      <span class="resValue" id="resPierre">0</span>
+      <span class="resMeta"><span class="delta" id="deltaPierre"></span><button class="resInfoBtn" data-info="pierre">i</button></span>
+    </div>
+    <div class="resChip" id="chipNourriture">
+      <span class="ic">🌾</span>
+      <span class="resValue" id="resNourriture">0</span>
+      <span class="resMeta"><span class="delta" id="deltaNourriture"></span><button class="resInfoBtn" data-info="nourriture">i</button></span>
+    </div>
+    <div class="resChip" id="chipOr">
+      <span class="ic">🪙</span>
+      <span class="resValue" id="resOr">0</span>
+      <span class="resMeta"><span class="delta" id="deltaOr"></span><button class="resInfoBtn" data-info="or">i</button></span>
+    </div>
+  </div>
+
   <header id="topbar">
-    <h1>Age to Age</h1>
-    <span id="topClock">🌱 J1</span>
-    <div id="topPop">👥 <span id="popCount">0</span></div>
+    <div class="popBadge"><span class="ic">👥</span><span id="popCount">0</span></div>
+    <span id="topClock">🌱 Printemps · Jour 1 · Matin</span>
+    <span id="difficultyBadge"></span>
+    <span id="speedControls">
+      <button data-speed="1" class="active">▶</button><button data-speed="3">▶▶</button><button data-speed="0">⏸</button>
+    </span>
   </header>
 
   <div id="defenseHud"></div>
-
-  <div id="resourceStrip">
-    <div class="resChip" id="chipBois"><span class="ic">🪵</span><span id="resBois">0</span><span class="delta" id="deltaBois"></span><button class="resInfoBtn" data-info="bois">i</button></div>
-    <div class="resChip" id="chipPierre"><span class="ic">🪨</span><span id="resPierre">0</span><span class="delta" id="deltaPierre"></span><button class="resInfoBtn" data-info="pierre">i</button></div>
-    <div class="resChip" id="chipNourriture"><span class="ic">🌾</span><span id="resNourriture">0</span><span class="delta" id="deltaNourriture"></span><button class="resInfoBtn" data-info="nourriture">i</button></div>
-    <div class="resChip" id="chipOr"><span class="ic">✨</span><span id="resOr">0</span><span class="delta" id="deltaOr"></span><button class="resInfoBtn" data-info="or">i</button></div>
-    <div class="resChip">
-      <span id="speedControls">
-        <button data-speed="1" class="active">▶</button><button data-speed="3">▶▶</button><button data-speed="0">⏸</button>
-      </span>
-    </div>
-  </div>
 
   <main>
     <div id="screenMap" class="screen active">
@@ -68,7 +99,7 @@
   <nav id="tabBar">
     <button data-tab="screenMap" class="active"><span class="tabIcon">🗺️</span>Carte</button>
     <button data-tab="screenBuild"><span class="tabIcon">🏗️</span>Construire</button>
-    <button data-tab="screenUpgrades"><span class="tabIcon">⚒️</span>Améliorations</button>
+    <button data-tab="screenUpgrades"><span class="tabIcon">🔧</span>Améliorations</button>
     <button data-tab="screenPop"><span class="tabIcon">👥</span>Habitants</button>
   </nav>
 

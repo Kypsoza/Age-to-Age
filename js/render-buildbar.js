@@ -85,7 +85,7 @@ function showMenuTooltip(anchorEl, key){
     }
     html += `</div>`;
   } else {
-    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin:6px 0 4px;">Coût de construction (${buildTimeForLevel(b.level)}s) :</div>`;
+    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin:6px 0 4px;">Coût de construction (${buildTimeForLevel(state, b.level)}s) :</div>`;
     for(const l of status.lines){
       html += `<div class="reqLine ${l.ok?'ok':'bad'}">${l.label}</div>`;
     }
@@ -99,9 +99,6 @@ function hideMenuTooltip(){
   if(tooltipEl){ tooltipEl.remove(); tooltipEl = null; }
 }
 
-// Positionne un tooltip pour qu'il reste toujours entièrement visible à
-// l'écran : centré horizontalement sur l'ancre mais bridé aux bords, et
-// bascule au-dessus/en-dessous de l'ancre selon la place disponible.
 function positionTooltip(el, rect, preferAbove){
   let left = rect.left + rect.width/2 - el.offsetWidth/2;
   left = Math.max(8, Math.min(left, window.innerWidth - el.offsetWidth - 8));
@@ -119,10 +116,6 @@ function positionTooltip(el, rect, preferAbove){
   el.style.top = top + "px";
 }
 
-// Tooltip dédié à la flèche ▲ sur la carte : contrairement au tooltip du
-// menu du bas (qui redirige une fois construit), celle-ci doit toujours
-// montrer le coût et le temps du PROCHAIN niveau, puisque c'est justement
-// le seul endroit où on peut encore l'améliorer.
 function showUpgradeTooltip(anchorEl, key){
   hideMenuTooltip();
   const def = MENU_BUILDINGS[key];
@@ -136,7 +129,7 @@ function showUpgradeTooltip(anchorEl, key){
   if(status.maxed){
     html += `<div style="color:var(--green-bright);font-size:11px;">Niveau maximum atteint.</div>`;
   } else {
-    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin:6px 0 4px;">Niveau ${b.level+1} — ${buildTimeForLevel(b.level)}s de construction :</div>`;
+    html += `<div style="color:var(--bone-dim);font-size:10.5px;margin:6px 0 4px;">Niveau ${b.level+1} — ${buildTimeForLevel(state, b.level)}s de construction :</div>`;
     for(const l of status.lines){
       html += `<div class="reqLine ${l.ok?'ok':'bad'}">${l.label}</div>`;
     }

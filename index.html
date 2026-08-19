@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
-  // Détection mobile : écran tactile étroit → redirige vers la version mobile dédiée.
-  // ?desktop=1 dans l'URL permet de forcer la version PC pour tester/déboguer.
   (function(){
     var forceDesktop = /[?&]desktop=1/.test(window.location.search);
     var isMobile = !forceDesktop
@@ -22,9 +20,26 @@
 <body>
 <div id="app">
 
+  <div id="difficultyScreen" class="overlayScreen">
+    <div class="overlayCard">
+      <h2>Age to Age</h2>
+      <p class="overlaySub">Choisis ta difficulté avant de commencer.</p>
+      <div id="difficultyGrid"></div>
+    </div>
+  </div>
+
+  <div id="defeatScreen" class="overlayScreen hidden">
+    <div class="overlayCard">
+      <h2>💀 Défaite</h2>
+      <p class="overlaySub" id="defeatMessage">La tribu s'est éteinte.</p>
+      <button id="btnDefeatRestart" class="foundBtn" style="margin-top:16px;">Nouvelle partie</button>
+    </div>
+  </div>
+
   <header id="topbar">
     <h1>Age to Age</h1>
     <span class="era-badge">Genèse — avant l'Ère 1</span>
+    <span class="era-badge" id="difficultyBadge"></span>
     <div class="res-pill" id="pillBois"><span class="ic">🪵</span><span id="resBois">0</span> <span class="delta" id="deltaBois"></span></div>
     <div class="res-pill" id="pillPierre"><span class="ic">🪨</span><span id="resPierre">0</span> <span class="delta" id="deltaPierre"></span></div>
     <div class="res-pill" id="pillNourriture"><span class="ic">🌾</span><span id="resNourriture">0</span> <span class="delta" id="deltaNourriture"></span></div>

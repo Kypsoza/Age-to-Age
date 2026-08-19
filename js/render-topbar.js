@@ -49,13 +49,6 @@ function renderTopbar(){
   renderDefenseHud();
 }
 
-// =====================================================================
-// HUD DÉFENSE — fixe en haut à gauche de l'écran (visible dès le début de
-// la partie, puisque la 1ère vague survient automatiquement 4 minutes
-// après le lancement, qu'une Caserne existe ou non). Reprend les mêmes
-// infos que la tuile Défense de la barre du bas (icône, niveau, score),
-// plus une barre de progression + un compte à rebours toujours visibles
-// sans avoir à ouvrir le panneau de droite ni scroller jusqu'au menu.
 function renderDefenseHud(){
   const el = document.getElementById("defenseHud");
   if(!el) return;
@@ -63,9 +56,9 @@ function renderDefenseHud(){
   const built = b && b.level > 0;
   const score = currentDefenseScore(state);
   const threshold = currentWaveThreshold(state);
-  const total = state.defense.assaultCount === 0 ? DEFENSE_FIRST_WAVE_TICKS : DEFENSE_WAVE_INTERVAL_TICKS;
+  const total = state.defense.assaultCount === 0 ? state.rules.defenseFirstWaveTicks : state.rules.defenseWaveIntervalTicks;
   const pct = Math.max(0, Math.min(100, Math.round((1 - state.defense.ticksUntilWave/total) * 100)));
-  const soon = state.defense.ticksUntilWave <= DEFENSE_WARNING_TICKS;
+  const soon = state.defense.ticksUntilWave <= state.rules.defenseWarningTicks;
   const ok = score >= threshold;
 
   el.innerHTML = `
@@ -78,6 +71,7 @@ function renderDefenseHud(){
 
 function renderAll(){
   renderTopbar();
+  renderDifficultyBadge();
   renderMarkers();
   renderInfoPanel();
   renderVillagePanel();
@@ -87,9 +81,6 @@ function renderAll(){
   document.getElementById("nightVeil").style.setProperty('--night-op', 0);
 }
 
-// ---------------------------------------------------------------------
-// Tooltips des pastilles de ressources : détail production/consommation
-// ---------------------------------------------------------------------
 function setupResourceTooltips(){
   const configs = [
     {id:"pillBois", resKey:"bois", label:"Bois"},
@@ -124,11 +115,11 @@ function showResourceTooltip(anchorEl, resKey, label){
   } else {
     html += `<div class="ttSub">Production active :</div>`;
     for(const p of siteProducers){
-      const rate = p.assigned*GATHER_RATE*mult;
+      const rate = p.assigned*GATHER_RATE*mult*state.rules.gatherRateMult;
       html += `<div class="reqLine ok"><span>${RESEARCH_TYPES[p.type].label} (${p.assigned} hab.)</span><span>+${rate.toFixed(1)}/s</span></div>`;
     }
     for(const a of altProducers){
-      const rate = a.assigned*GATHER_RATE*a.cfg.rateMult*mult;
+      const rate = a.assigned*GATHER_RATE*a.cfg.rateMult*mult*state.rules.gatherRateMult;
       html += `<div class="reqLine ok"><span>${MENU_BUILDINGS[a.key].name} (${a.assigned} hab.)</span><span>+${rate.toFixed(1)}/s</span></div>`;
     }
   }

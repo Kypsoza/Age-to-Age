@@ -36,9 +36,6 @@ function renderTopStrip(){
   renderDefenseHud();
 }
 
-// HUD Défense mobile — fixe en haut à gauche de l'écran, sous la topbar.
-// Visible dès le début de la partie (la 1ère vague survient automatiquement
-// 4 minutes après le lancement, qu'une Caserne existe ou non).
 function renderDefenseHud(){
   const el = document.getElementById("defenseHud");
   if(!el) return;
@@ -46,9 +43,9 @@ function renderDefenseHud(){
   const built = b && b.level > 0;
   const score = currentDefenseScore(state);
   const threshold = currentWaveThreshold(state);
-  const total = state.defense.assaultCount === 0 ? DEFENSE_FIRST_WAVE_TICKS : DEFENSE_WAVE_INTERVAL_TICKS;
+  const total = state.defense.assaultCount === 0 ? state.rules.defenseFirstWaveTicks : state.rules.defenseWaveIntervalTicks;
   const pct = Math.max(0, Math.min(100, Math.round((1 - state.defense.ticksUntilWave/total) * 100)));
-  const soon = state.defense.ticksUntilWave <= DEFENSE_WARNING_TICKS;
+  const soon = state.defense.ticksUntilWave <= state.rules.defenseWarningTicks;
   const ok = score >= threshold;
 
   el.innerHTML = `
@@ -62,7 +59,7 @@ function renderDefenseHud(){
 // =====================================================================
 // BOTTOM SHEET — détails contextuels (site, entrepôt, bâtiment)
 // =====================================================================
-let currentSheet = null; // {kind:'site'|'storage'|'building', key}
+let currentSheet = null;
 
 function openSheet(html){
   document.getElementById("sheetContent").innerHTML = html;
@@ -149,7 +146,7 @@ function openBuildingSheet(key){
     if(status.maxed){
       html += `<div style="color:var(--green-bright);font-size:13px;margin-top:8px;">Niveau maximum atteint.</div>`;
     } else {
-      html += `<div style="color:var(--bone-dim);font-size:11px;margin:8px 0 4px;">Niveau ${b.level+1} — ${buildTimeForLevel(b.level)}s :</div>`;
+      html += `<div style="color:var(--bone-dim);font-size:11px;margin:8px 0 4px;">Niveau ${b.level+1} — ${buildTimeForLevel(state, b.level)}s :</div>`;
       html += reqLinesHtml(status.lines,'upgradeReqLine');
       html += `<button class="bigActionBtn" id="sheetBuild">${b.level===0?'Construire':'Améliorer'}</button>`;
     }
@@ -190,7 +187,7 @@ function renderDefenseSheetHtml(){
     <div class="invRow ${ok?'ok':'bad'}"><span>Score de Défense</span><span>${score}/${threshold}</span></div>
     <div class="invRow"><span>Vague n°${waveNumber}</span><span>${state.defense.ticksUntilWave}s</span></div>
     <div style="color:var(--bone-dim);font-size:11.5px;margin-top:6px;line-height:1.5;">
-      Défense insuffisante à l'arrivée de la vague = -25% de chaque ressource stockée. Chaque soldat coûte aussi ${DEFENSE_SOLDIER_GOLD_COST} ✨/s en continu.
+      Défense insuffisante à l'arrivée de la vague = -${Math.round(state.rules.defenseLossRatio*100)}% de chaque ressource stockée. Chaque soldat coûte aussi ${state.rules.defenseSoldierGoldCost} 🪙/s en continu.
     </div>
   </div>`;
 }
@@ -203,7 +200,7 @@ function renderBuildScreen(){
   const hdv = siteByType(state, "hotelville");
   const showVillage = hdv && hdv.discovered && !state.villageFounded;
   if(showVillage){
-    const lines = Object.entries(VILLAGE_COST).map(([res,amt])=>{
+    const lines = Object.entries(scaledVillageCost(state)).map(([res,amt])=>{
       const have = Math.floor(state.resources[res]||0);
       return `<div class="invRow ${have>=amt?'ok':'bad'}"><span>${iconFor(res)} ${have}/${amt}</span></div>`;
     }).join("");
@@ -364,14 +361,10 @@ function renderResetButton(){
   btn.textContent = "🗑️ Nouvelle partie";
   btn.onclick = ()=>{
     if(btn.dataset.armed === "1"){
-      state = freshState();
       localStorage.removeItem(SAVE_KEY);
-      saveGame(true);
-      renderMapBackground();
-      renderAll();
-      toast("Nouvelle partie démarrée.");
       btn.textContent = "🗑️ Nouvelle partie";
       btn.dataset.armed = "0";
+      showDifficultyScreen();
     } else {
       btn.dataset.armed = "1";
       btn.textContent = "⚠️ Confirmer ? (tap à nouveau)";
@@ -387,6 +380,7 @@ function renderResetButton(){
 // =====================================================================
 function renderAll(){
   renderTopStrip();
+  renderDifficultyBadge();
   renderMarkers();
   renderBuildScreen();
   renderUpgradesScreen();

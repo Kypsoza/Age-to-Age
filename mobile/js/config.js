@@ -3,13 +3,13 @@
 // carte adaptées au portrait. state.js et simulation.js sont partagés tels
 // quels avec la version PC (chargés depuis ../../js/).
 // =====================================================================
-const MAP_W = 650, MAP_H = 1050;  // carte verticale, adaptée à un écran mobile en portrait
+const MAP_W = 650, MAP_H = 1050;
 const MARKER_MIN_DIST = 130;
 const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
 const NIGHT_START_RATIO = 0.62;
-const SAVE_KEY = "age2age_save_mobile_v2"; // sauvegarde séparée de la version PC (dimensions de carte différentes)
+const SAVE_KEY = "age2age_save_mobile_v2";
 const AUTOSAVE_MS = 120000;
 
 const SEASONS = [
@@ -19,15 +19,15 @@ const SEASONS = [
   {name:"Hiver",      icon:"❄️"},
 ];
 
-const START_POPULATION = 5;
-const START_FOOD = 50;
+// START_POPULATION et START_FOOD sont désormais définis par palier de
+// difficulté (voir DIFFICULTIES en bas de fichier), identique à la version PC.
 
 const RESEARCH_TYPES = {
   nourriture: { label:"Zone de Nourriture", icon:"❓", revealedIcon:"🌾", effort:40,
     desc:"Un terrain fertile où la tribu pourra cultiver ou chasser." },
   bois:       { label:"Zone Boisée", icon:"❓", revealedIcon:"🪵", effort:40,
     desc:"Une forêt dense, riche en bois de charpente." },
-  or:         { label:"Gisement d'Or", icon:"❓", revealedIcon:"✨", effort:50,
+  or:         { label:"Gisement d'Or", icon:"❓", revealedIcon:"🪙", effort:50,
     desc:"Des vestiges technologiques enfouis, brillants comme de l'or." },
   hotelville: { label:"Emplacement de l'Hôtel de Ville", icon:"❓", revealedIcon:"🏛️", effort:35,
     desc:"L'endroit où, inconsciemment, la tribu se sent chez elle. Un écho de mémoire génétique." },
@@ -43,29 +43,18 @@ const GATHER_RATE = 0.4;
 const GATHER_CAP_BASE = 3;
 const GATHER_CAP_PER_HDV_LEVEL = 5;
 const FOOD_CONSUMPTION = 0.12;
-const LEVEL_COST_MULTIPLIER = 1.9; // multiplicateur de coût par niveau pour les bâtiments à niveaux illimités
+const LEVEL_COST_MULTIPLIER = 1.9;
 
-// Temps de construction (en ticks) : ralentit volontairement la progression
-// pour que chaque niveau soit une vraie décision, pas un clic instantané.
-const BUILD_TIME_BASE = 18;     // ticks pour un niveau 0→1
-const BUILD_TIME_PER_LEVEL = 9; // ticks supplémentaires par niveau déjà atteint
+const BUILD_TIME_BASE = 18;
+const BUILD_TIME_PER_LEVEL = 9;
 
-// Coût d'un habitant recruté depuis la réserve (Maison) vers la population
-// active. Croissance géométrique : les premiers sont abordables, puis ça
-// ralentit nettement pour forcer une gestion progressive de la nourriture.
-const RECRUIT_COST_BASE = 8;      // nourriture pour le 1er recrutement
-const RECRUIT_COST_GROWTH = 1.4;  // multiplicateur par recrutement déjà effectué
+// Coût de recrutement : désormais défini par palier de difficulté.
 
-// Pavillon de Chasse et Cabane de Pêche sont de vrais points de récolte
-// alternatifs pour la nourriture, avec un meilleur rendement que le site de
-// base (multiplicateur appliqué à GATHER_RATE).
 const ALT_GATHER = {
   huntlodge: { resource:"nourriture", rateMult:1.5 },
   fishcabin: { resource:"nourriture", rateMult:2.0 },
 };
 
-// Entrepôt : plafond de stockage indépendant par ressource. L'Or a lui
-// aussi un plafond améliorable (coût en bois+pierre) depuis la v0.8.
 const STORAGE_CAP_BASE = 1000;
 const STORAGE_CAP_PER_TIER = 1000;
 const STORAGE_TIER_COST_BASE = {
@@ -79,13 +68,6 @@ const STORABLE_RESOURCES = ["bois","pierre","nourriture","or"];
 
 const VILLAGE_COST = { bois:30, or:15 };
 
-// Bâtiments du menu (débloqué une fois le Village fondé). "requires" liste
-// les clés d'autres bâtiments du menu qu'il faut avoir construits ;
-// "requiresLevel" force un niveau minimum sur l'un d'entre eux ;
-// "requiresAny" signifie qu'un seul des "requires" suffit (au lieu de tous).
-// Tous les coûts mélangent Bois/Pierre/Or : impossible de tout financer
-// avec une seule ressource, il faut répartir ses habitants sur plusieurs
-// zones de récolte pour progresser.
 const MENU_BUILDINGS = {
   townhall: { name:"Hôtel de Ville", icon:"🏛️", cost:{bois:25,pierre:15,or:12}, requires:[], maxLevel:null,
     desc:"Le cœur de la tribu. Débloque tous les autres bâtiments. Chaque niveau augmente de "+GATHER_CAP_PER_HDV_LEVEL+" le plafond d'habitants assignables par zone/bâtiment." },
@@ -106,11 +88,6 @@ const MENU_BUILDINGS = {
 };
 const MENU_ORDER = ["townhall","house","forge","huntlodge","fishcabin","treasury","mill","barracks"];
 
-// Améliorations d'income par ressource : chaque palier (tier) coûte de plus
-// en plus cher et ajoute +100% cumulatif à l'income de cette ressource.
-// Le coût ne porte jamais sur la ressource qu'on améliore elle-même — pour
-// booster le Bois il faut de la Pierre et de l'Or, etc. — afin d'obliger à
-// répartir ses habitants sur toutes les zones plutôt que de se spécialiser.
 const UPGRADES = {
   bois:       { buildingKey:"forge",    label:"Bois",       cost:{pierre:12,or:15} },
   pierre:     { buildingKey:"forge",    label:"Pierre",     cost:{bois:15,or:12} },
@@ -120,18 +97,106 @@ const UPGRADES = {
 const UPGRADE_COST_MULTIPLIER = 1.8;
 
 // =====================================================================
-// PHASE 8 — DÉFENSE & ASSAUTS (Caserne) — identique à la version PC
+// PHASE 8 — DÉFENSE & ASSAUTS (Caserne)
 // =====================================================================
-// Calibrage (identique à la version PC) : DEFENSE_PER_SOLDIER=25 ramène les
-// seuils [50,65,85,110,145] à 2/3/4/5/6 soldats (au lieu de 7 à 19 avec
-// l'ancienne valeur de 8). Délai avant la 1ère vague porté à 10 minutes pour
-// laisser le temps de fonder le Village, construire Hôtel de Ville + Maison
-// ×2 + Caserne, et assigner quelques soldats avant le 1er assaut.
-const DEFENSE_PER_SOLDIER = 25;
-const DEFENSE_WAVE_THRESHOLDS = [50, 65, 85, 110, 145];
 const DEFENSE_WAVE_LOOP_AT_MAX = true;
-const DEFENSE_FIRST_WAVE_TICKS = 600;
-const DEFENSE_WAVE_INTERVAL_TICKS = 90;
-const DEFENSE_LOSS_RATIO = 0.25;
-const DEFENSE_WARNING_TICKS = 15;
-const DEFENSE_SOLDIER_GOLD_COST = 0.2;
+
+// =====================================================================
+// DIFFICULTÉ — 4 paliers choisis en début de partie (identique à la PC)
+// =====================================================================
+// Facile/Moyen : délais validés par simulation. Difficile/Très difficile :
+// estimés à partir du temps de construction de la Caserne observé (le bot
+// de test n'achète pas les améliorations d'income Forge/Trésor) — voir
+// js/config.js (PC) pour le détail du calibrage et ses limites.
+const DIFFICULTIES = {
+  easy: {
+    label: "Facile",
+    buildCostMult: 0.8,
+    gatherRateMult: 1.25,
+    researchEffortMult: 0.8,
+    buildTimeMult: 0.8,
+    startPopulation: 6,
+    startFood: 70,
+    recruitCostBase: 6,
+    recruitCostGrowth: 1.3,
+    defenseWaveThresholds: [50, 65, 85, 110, 145],
+    defensePerSoldier: 30,
+    defenseSoldierGoldCost: 0.12,
+    defenseLossRatio: 0.15,
+    defenseFirstWaveTicks: 900,
+    defenseWaveIntervalTicks: 110,
+    defenseWarningTicks: 20,
+    famineGraceTicks: 35,
+    famineDeathIntervalBase: 35,
+    famineDeathIntervalFloor: 18,
+    famineDeathIntervalDecay: 0.9,
+  },
+  medium: {
+    label: "Moyen",
+    buildCostMult: 1,
+    gatherRateMult: 1,
+    researchEffortMult: 1,
+    buildTimeMult: 1,
+    startPopulation: 5,
+    startFood: 50,
+    recruitCostBase: 8,
+    recruitCostGrowth: 1.4,
+    defenseWaveThresholds: [50, 65, 85, 110, 145],
+    defensePerSoldier: 25,
+    defenseSoldierGoldCost: 0.2,
+    defenseLossRatio: 0.25,
+    defenseFirstWaveTicks: 600,
+    defenseWaveIntervalTicks: 90,
+    defenseWarningTicks: 15,
+    famineGraceTicks: 18,
+    famineDeathIntervalBase: 20,
+    famineDeathIntervalFloor: 9,
+    famineDeathIntervalDecay: 0.8,
+  },
+  hard: {
+    label: "Difficile",
+    buildCostMult: 1.2,
+    gatherRateMult: 0.8,
+    researchEffortMult: 1.2,
+    buildTimeMult: 1.15,
+    startPopulation: 5,
+    startFood: 40,
+    recruitCostBase: 10,
+    recruitCostGrowth: 1.5,
+    defenseWaveThresholds: [55, 72, 94, 122, 159],
+    defensePerSoldier: 18,
+    defenseSoldierGoldCost: 0.25,
+    defenseLossRatio: 0.35,
+    defenseFirstWaveTicks: 780,
+    defenseWaveIntervalTicks: 75,
+    defenseWarningTicks: 10,
+    famineGraceTicks: 18,
+    famineDeathIntervalBase: 20,
+    famineDeathIntervalFloor: 9,
+    famineDeathIntervalDecay: 0.8,
+  },
+  very_hard: {
+    label: "Très difficile",
+    buildCostMult: 1.4,
+    gatherRateMult: 0.65,
+    researchEffortMult: 1.4,
+    buildTimeMult: 1.3,
+    startPopulation: 5,
+    startFood: 30,
+    recruitCostBase: 12,
+    recruitCostGrowth: 1.6,
+    defenseWaveThresholds: [60, 80, 104, 136, 177],
+    defensePerSoldier: 14,
+    defenseSoldierGoldCost: 0.3,
+    defenseLossRatio: 0.4,
+    defenseFirstWaveTicks: 1500,
+    defenseWaveIntervalTicks: 65,
+    defenseWarningTicks: 8,
+    famineGraceTicks: 18,
+    famineDeathIntervalBase: 20,
+    famineDeathIntervalFloor: 9,
+    famineDeathIntervalDecay: 0.8,
+  },
+};
+const DIFFICULTY_ORDER = ["easy", "medium", "hard", "very_hard"];
+const DEFAULT_DIFFICULTY = "medium";

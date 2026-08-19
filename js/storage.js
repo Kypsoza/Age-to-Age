@@ -40,10 +40,18 @@ function importGame(file){
 }
 
 // Complète une sauvegarde plus ancienne avec les champs introduits par des
-// phases ultérieures (ex: Phase 8 — Défense), pour éviter tout crash au
-// chargement d'une partie qui ne les avait pas encore.
+// phases ultérieures (Défense, puis Difficulté/Famine), pour éviter tout
+// crash au chargement d'une partie qui ne les avait pas encore. Une
+// sauvegarde sans "rules" est nécessairement antérieure au système de
+// difficulté : elle est alors migrée sur le palier "Moyen" par défaut, ce
+// qui correspond exactement à son comportement d'origine (valeurs
+// identiques à l'ancien jeu de constantes fixes).
 function ensureStateMigrations(s){
-  if(!s.defense) s.defense = freshDefenseState();
+  if(!s.difficulty || !DIFFICULTIES[s.difficulty]) s.difficulty = DEFAULT_DIFFICULTY;
+  if(!s.rules) s.rules = DIFFICULTIES[s.difficulty];
+  if(!s.defense) s.defense = freshDefenseState(s.rules);
+  if(!s.famine) s.famine = freshFamineState();
+  if(typeof s.defeated !== "boolean") s.defeated = false;
   if(s.menuBuildings && s.menuBuildings.barracks && typeof s.menuBuildings.barracks.assignedSoldiers !== "number"){
     s.menuBuildings.barracks.assignedSoldiers = 0;
   }

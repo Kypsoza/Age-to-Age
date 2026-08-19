@@ -2,9 +2,6 @@
 // RENDERING — carte procédurale (SVG de fond + marqueurs HTML par-dessus)
 // =====================================================================
 
-// Construit un chemin SVG "blob" lisse et organique à partir d'un centre,
-// d'un rayon de base et d'un seed (pour que la forme soit stable d'un
-// rendu à l'autre tant que la partie ne change pas).
 function blobPath(cx, cy, baseR, seedOffset, points, irregularity){
   points = points || 10;
   irregularity = irregularity===undefined ? 0.35 : irregularity;
@@ -267,9 +264,6 @@ function buildAssignControls(site){
   return ctrl;
 }
 
-// Mise à jour légère à chaque tick : ne touche qu'au contenu des barres et
-// compteurs déjà présents dans le DOM, ne recrée jamais les marqueurs —
-// c'est ce qui garantit qu'un clic/survol en cours n'est jamais interrompu.
 function updateTickVisuals(){
   document.getElementById("nightVeil").style.setProperty('--night-op', 0);
 
@@ -277,11 +271,6 @@ function updateTickVisuals(){
   const completions = state.justCompleted && state.justCompleted.length > 0;
   const defenseEvent = !!state.justDefenseEvent;
   if(discoveries || completions || defenseEvent){
-    // Un site vient d'être découvert, une construction vient de se terminer,
-    // ou une vague d'assaut vient d'être résolue (icône/contrôles/stocks à
-    // mettre à jour) : un rebuild complet des marqueurs est nécessaire, mais
-    // ça ne se produit qu'à ce moment précis, jamais à chaque tick — pas de
-    // risque de scintillement.
     renderMarkers();
     state.justDiscovered = [];
     state.justCompleted = [];

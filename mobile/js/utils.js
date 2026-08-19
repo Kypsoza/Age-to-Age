@@ -11,7 +11,7 @@ function toast(msg){
 }
 
 function iconFor(resKey){
-  return {bois:"🪵",pierre:"🪨",nourriture:"🌾",or:"✨"}[resKey] || "";
+  return {bois:"🪵",pierre:"🪨",nourriture:"🌾",or:"🪙"}[resKey] || "";
 }
 
 function showInfoModal(title, bodyHtml){

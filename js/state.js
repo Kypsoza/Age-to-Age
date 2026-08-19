@@ -12,14 +12,18 @@ function mulberry32(seed){
   };
 }
 
-function freshState(){
+function freshState(difficultyKey){
+  difficultyKey = DIFFICULTIES[difficultyKey] ? difficultyKey : DEFAULT_DIFFICULTY;
+  const rules = DIFFICULTIES[difficultyKey];
   const seed = Math.floor(Math.random()*1e9);
   const rand = mulberry32(seed);
 
   const s = {
     tick:0, day:1, seasonIdx:0, speed:1,
-    resources: { bois:0, pierre:0, nourriture:START_FOOD, or:0 },
-    population: START_POPULATION,   // habitants actifs (assignables)
+    difficulty: difficultyKey,
+    rules, // copie figée des règles du palier choisi (coûts, chrono, défense, famine...) pour toute la durée de la partie
+    resources: { bois:0, pierre:0, nourriture:rules.startFood, or:0 },
+    population: rules.startPopulation,   // habitants actifs (assignables)
     populationReserve: 0,           // habitants en réserve (Maison), à recruter contre nourriture
     recruitedCount: 0,              // nb déjà recrutés au-delà des survivants initiaux (pour le coût croissant)
     seed,
@@ -32,14 +36,16 @@ function freshState(){
     upgrades: { bois:0, pierre:0, or:0, nourriture:0 },
     storageTiers: { bois:0, pierre:0, nourriture:0, or:0 },
     selected: null, // {kind:'site', type} | {kind:'storage'} | {kind:'menuBuilding', key}
-    // Ces 3 champs sont normalement réinitialisés à chaque tick de timer
+    // Ces champs sont normalement réinitialisés à chaque tick de timer
     // réel par main.js (cf. BUG-P3-003), AVANT tout appel à simTick() — on
     // leur donne malgré tout une valeur par défaut ici pour qu'un état
     // fraîchement créé soit toujours sûr à lire, même avant le 1er tick.
     justDiscovered: [],
     justCompleted: [],
     justDefenseEvent: false,
-    defense: freshDefenseState(),
+    defense: freshDefenseState(rules),
+    famine: freshFamineState(),
+    defeated: false, // passe à true quand la population active tombe à 0 (écran de Défaite)
   };
 
   const lake = s.decor.lake;
@@ -94,10 +100,11 @@ function freshState(){
 
   for(const type of Object.keys(RESEARCH_TYPES)){
     const pos = pickSpot();
+    const effort = Math.round(RESEARCH_TYPES[type].effort * rules.researchEffortMult);
     s.researchSites.push({
       type, x:pos.x, y:pos.y,
-      effortTotal: RESEARCH_TYPES[type].effort,
-      effortRemaining: RESEARCH_TYPES[type].effort,
+      effortTotal: effort,
+      effortRemaining: effort,
       assigned: 0,
       discovered: false,
       launched: false, // tant que non lancée, seul un bouton "Lancer la recherche" est visible

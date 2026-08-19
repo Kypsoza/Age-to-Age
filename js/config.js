@@ -17,11 +17,13 @@ const SEASONS = [
   {name:"Hiver",      icon:"❄️"},
 ];
 
-const START_POPULATION = 5;
-const START_FOOD = 50; // réserves de la tribu à l'arrivée, le temps de trouver/organiser la nourriture
+// START_POPULATION et START_FOOD sont désormais définis par palier de
+// difficulté (voir DIFFICULTIES en bas de fichier) plutôt que fixes ici.
 
 // Les 4 zones à découvrir en tout début de partie. "effort" = nombre de
 // points d'effort nécessaires (1 habitant assigné consomme 1 point/tick).
+// Ce sont des valeurs DE BASE ; le palier de difficulté applique un
+// multiplicateur (researchEffortMult) au moment de la génération de partie.
 const RESEARCH_TYPES = {
   nourriture: { label:"Zone de Nourriture", icon:"❓", revealedIcon:"🌾", effort:40,
     desc:"Un terrain fertile où la tribu pourra cultiver ou chasser." },
@@ -41,7 +43,7 @@ const TERRAIN_LABELS = {
 
 // Récolte manuelle sur une zone découverte (avant que le vrai bâtiment
 // collecteur n'existe — Phase 4). Rendement modeste et volontairement lent.
-const GATHER_RATE = 0.4;      // ressource / tick / habitant assigné
+const GATHER_RATE = 0.4;      // ressource / tick / habitant assigné — valeur DE BASE, multipliée par gatherRateMult (difficulté)
 const GATHER_CAP_BASE = 3;    // plafond par zone avant que l'Hôtel de Ville existe
 const GATHER_CAP_PER_HDV_LEVEL = 5; // bonus de plafond par niveau d'Hôtel de Ville
 const FOOD_CONSUMPTION = 0.12; // nourriture / tick / habitant, uniquement si la zone nourriture a du monde assigné ce tick
@@ -49,14 +51,11 @@ const LEVEL_COST_MULTIPLIER = 1.9; // multiplicateur de coût par niveau pour le
 
 // Temps de construction (en ticks) : ralentit volontairement la progression
 // pour que chaque niveau soit une vraie décision, pas un clic instantané.
-const BUILD_TIME_BASE = 18;     // ticks pour un niveau 0→1
-const BUILD_TIME_PER_LEVEL = 9; // ticks supplémentaires par niveau déjà atteint
+const BUILD_TIME_BASE = 18;     // ticks pour un niveau 0→1 — valeur DE BASE, multipliée par buildTimeMult (difficulté)
+const BUILD_TIME_PER_LEVEL = 9; // ticks supplémentaires par niveau déjà atteint — idem
 
-// Coût d'un habitant recruté depuis la réserve (Maison) vers la population
-// active. Croissance géométrique : les premiers sont abordables, puis ça
-// ralentit nettement pour forcer une gestion progressive de la nourriture.
-const RECRUIT_COST_BASE = 8;      // nourriture pour le 1er recrutement
-const RECRUIT_COST_GROWTH = 1.4;  // multiplicateur par recrutement déjà effectué
+// Coût de recrutement (base + croissance) : désormais défini par palier de
+// difficulté (recruitCostBase / recruitCostGrowth dans DIFFICULTIES).
 
 // Pavillon de Chasse et Cabane de Pêche sont de vrais points de récolte
 // alternatifs pour la nourriture, avec un meilleur rendement que le site de
@@ -78,7 +77,7 @@ const STORAGE_TIER_COST_BASE = {
 const STORAGE_TIER_COST_MULTIPLIER = 1.7;
 const STORABLE_RESOURCES = ["bois","pierre","nourriture","or"];
 
-const VILLAGE_COST = { bois:30, or:15 };
+const VILLAGE_COST = { bois:30, or:15 }; // valeurs DE BASE, multipliées par buildCostMult (difficulté)
 
 // Bâtiments du menu (débloqué une fois le Village fondé). "requires" liste
 // les clés d'autres bâtiments du menu qu'il faut avoir construits ;
@@ -124,30 +123,136 @@ const UPGRADE_COST_MULTIPLIER = 1.8;
 // PHASE 8 — DÉFENSE & ASSAUTS (Caserne)
 // =====================================================================
 // La Caserne (barracks) permet d'assigner des habitants comme soldats.
-// Chaque soldat assigné apporte un score de Défense fixe. À intervalle
-// régulier (DEFENSE_WAVE_INTERVAL_TICKS), une vague d'assaut survient :
-// si le score de Défense au moment de l'assaut est insuffisant face au
-// seuil de la vague courante, la tribu perd un pourcentage de chaque
+// Chaque soldat assigné apporte un score de Défense. À intervalle régulier,
+// une vague d'assaut survient : si le score de Défense est insuffisant face
+// au seuil de la vague courante, la tribu perd un pourcentage de chaque
 // ressource stockée ; sinon la vague est repoussée sans perte.
+// DEFENSE_WAVE_LOOP_AT_MAX : au-delà de la 5e vague, les vagues suivantes
+// restent au dernier seuil de la liste, en boucle (jamais plus dur que ça).
+const DEFENSE_WAVE_LOOP_AT_MAX = true;
+
+// =====================================================================
+// DIFFICULTÉ — 4 paliers choisis en début de partie
+// =====================================================================
+// Chaque palier définit un jeu complet de règles (rules) calculées et
+// vérifiées par simulation :
+//  - Chrono : délai avant la 1ère vague, intervalle des suivantes, alerte
+//  - Défense : seuils des vagues, score/soldat, coût en or/soldat, perte en
+//    cas d'échec
+//  - Économie : multiplicateurs sur coût de construction et vitesse de
+//    récolte
+//  - Rythme : multiplicateurs sur le temps de recherche et de construction
+//  - Population & départ : survivants initiaux, nourriture initiale, coût
+//    de recrutement
+//  - Famine : si la nourriture reste à 0, un habitant meurt après un délai
+//    de grâce, puis la fréquence des morts s'accélère (voir tickFamine)
 //
-// Calibrage (simulé avec un bot jouant "efficacement" : recherche/récolte
-// répartie automatiquement, construction Hôtel de Ville → Maison ×2 →
-// Caserne dès que possible) :
-//  - Ce bot fonde le Village en ~1,5 min et termine la Caserne en ~5 min.
-//  - Avec DEFENSE_PER_SOLDIER=25, les seuils [50,65,85,110,145] ne
-//    demandent plus que 2 / 3 / 4 / 5 / 6 soldats (au lieu de 7 à 19 avec
-//    l'ancienne valeur de 8) — largement atteignable avec la population
-//    d'une dizaine d'habitants disponible à ce stade.
-//  - Le délai avant la 1ère vague est porté à 10 minutes (600 ticks) pour
-//    laisser une marge confortable à un joueur normal (moins optimisé que
-//    le bot de test) : de quoi fonder le Village, construire l'Hôtel de
-//    Ville, la Maison (x2, pour débloquer la Caserne), la Caserne
-//    elle-même, ET recruter/assigner quelques soldats avant le 1er assaut.
-const DEFENSE_PER_SOLDIER = 25;          // score de Défense apporté par soldat assigné
-const DEFENSE_WAVE_THRESHOLDS = [50, 65, 85, 110, 145]; // seuils des 5 premières vagues (~×1.3/vague)
-const DEFENSE_WAVE_LOOP_AT_MAX = true;   // au-delà de la 5e, les vagues suivantes restent au dernier seuil (145), en boucle
-const DEFENSE_FIRST_WAVE_TICKS = 600;    // 1ère vague déclenchée automatiquement 10 minutes après le début de la partie (indépendant de la Caserne)
-const DEFENSE_WAVE_INTERVAL_TICKS = 90;  // intervalle entre les vagues suivantes (secondes de jeu, ticks=1s)
-const DEFENSE_LOSS_RATIO = 0.25;         // fraction perdue de chaque ressource stockée si la défense est insuffisante
-const DEFENSE_WARNING_TICKS = 15;        // ticks avant l'assaut à partir desquels un avertissement s'affiche
-const DEFENSE_SOLDIER_GOLD_COST = 0.2;   // or / tick / soldat assigné (en plus de la nourriture consommée par tout habitant)
+// Calibrage (bot de simulation jouant chaque configuration : recherche et
+// récolte réparties automatiquement en priorisant survie > fondation du
+// Village > construction, jusqu'à avoir une Caserne + assez de soldats
+// "payables en or" pour le seuil de la vague 1) :
+//  - Facile   : bot prêt en ~3,2 min → 1ère vague à 15 min (large marge)
+//  - Moyen    : bot prêt en ~5,5 min → 1ère vague à 10 min (marge confortable)
+//  - Difficile / Très difficile : le bot de test ne sait PAS acheter les
+//    améliorations d'income (Forge/Trésor), qui sont pourtant l'outil prévu
+//    par le jeu pour desserrer la contrainte or/soldats à ces paliers — sans
+//    elles, le bot met beaucoup plus longtemps qu'un joueur optimal réel à
+//    atteindre le seuil de la vague 1 (jusqu'à ~44 min mesurées en Difficile
+//    sans aucune amélioration achetée). Les délais ci-dessous (13 min pour
+//    Difficile, 25 min pour Très difficile) sont donc une ESTIMATION
+//    raisonnée à partir des temps de construction de la Caserne observés
+//    (~10,5 min et ~18 min) plutôt qu'un minimum théorique strictement
+//    prouvé — contrairement à Facile/Moyen, ils mériteraient d'être
+//    ajustés après un vrai playtest.
+const DIFFICULTIES = {
+  easy: {
+    label: "Facile",
+    buildCostMult: 0.8,
+    gatherRateMult: 1.25,
+    researchEffortMult: 0.8,
+    buildTimeMult: 0.8,
+    startPopulation: 6,
+    startFood: 70,
+    recruitCostBase: 6,
+    recruitCostGrowth: 1.3,
+    defenseWaveThresholds: [50, 65, 85, 110, 145],
+    defensePerSoldier: 30,
+    defenseSoldierGoldCost: 0.12,
+    defenseLossRatio: 0.15,
+    defenseFirstWaveTicks: 900,
+    defenseWaveIntervalTicks: 110,
+    defenseWarningTicks: 20,
+    famineGraceTicks: 35,
+    famineDeathIntervalBase: 35,
+    famineDeathIntervalFloor: 18,
+    famineDeathIntervalDecay: 0.9,
+  },
+  medium: {
+    label: "Moyen",
+    buildCostMult: 1,
+    gatherRateMult: 1,
+    researchEffortMult: 1,
+    buildTimeMult: 1,
+    startPopulation: 5,
+    startFood: 50,
+    recruitCostBase: 8,
+    recruitCostGrowth: 1.4,
+    defenseWaveThresholds: [50, 65, 85, 110, 145],
+    defensePerSoldier: 25,
+    defenseSoldierGoldCost: 0.2,
+    defenseLossRatio: 0.25,
+    defenseFirstWaveTicks: 600,
+    defenseWaveIntervalTicks: 90,
+    defenseWarningTicks: 15,
+    famineGraceTicks: 18,
+    famineDeathIntervalBase: 20,
+    famineDeathIntervalFloor: 9,
+    famineDeathIntervalDecay: 0.8,
+  },
+  hard: {
+    label: "Difficile",
+    buildCostMult: 1.2,
+    gatherRateMult: 0.8,
+    researchEffortMult: 1.2,
+    buildTimeMult: 1.15,
+    startPopulation: 5,
+    startFood: 40,
+    recruitCostBase: 10,
+    recruitCostGrowth: 1.5,
+    defenseWaveThresholds: [55, 72, 94, 122, 159],
+    defensePerSoldier: 18,
+    defenseSoldierGoldCost: 0.25,
+    defenseLossRatio: 0.35,
+    defenseFirstWaveTicks: 780,
+    defenseWaveIntervalTicks: 75,
+    defenseWarningTicks: 10,
+    famineGraceTicks: 18,
+    famineDeathIntervalBase: 20,
+    famineDeathIntervalFloor: 9,
+    famineDeathIntervalDecay: 0.8,
+  },
+  very_hard: {
+    label: "Très difficile",
+    buildCostMult: 1.4,
+    gatherRateMult: 0.65,
+    researchEffortMult: 1.4,
+    buildTimeMult: 1.3,
+    startPopulation: 5,
+    startFood: 30,
+    recruitCostBase: 12,
+    recruitCostGrowth: 1.6,
+    defenseWaveThresholds: [60, 80, 104, 136, 177],
+    defensePerSoldier: 14,
+    defenseSoldierGoldCost: 0.3,
+    defenseLossRatio: 0.4,
+    defenseFirstWaveTicks: 1500,
+    defenseWaveIntervalTicks: 65,
+    defenseWarningTicks: 8,
+    famineGraceTicks: 18,
+    famineDeathIntervalBase: 20,
+    famineDeathIntervalFloor: 9,
+    famineDeathIntervalDecay: 0.8,
+  },
+};
+const DIFFICULTY_ORDER = ["easy", "medium", "hard", "very_hard"];
+const DEFAULT_DIFFICULTY = "medium";

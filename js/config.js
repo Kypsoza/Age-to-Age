@@ -1,13 +1,13 @@
 // =====================================================================
 // CONFIG — PHASE 1 : Genèse, Recherche & Découverte
 // =====================================================================
-const MAP_W = 1100, MAP_H = 680; // dimensions de la carte en pixels (plus de grille)
-const MARKER_MIN_DIST = 150;    // distance mini entre deux marqueurs (px)
+const MAP_W = 650, MAP_H = 1050; // dimensions de la carte en pixels (portrait — UI unique PC+mobile)
+const MARKER_MIN_DIST = 130;    // distance mini entre deux marqueurs (px)
 const TICK_MS = 1000;
 const TICKS_PER_DAY = 20;
 const DAYS_PER_SEASON = 6;
 const NIGHT_START_RATIO = 0.62;
-const SAVE_KEY = "age2age_save_phase1_v6";
+const SAVE_KEY = "age2age_save_unified_v1";
 const AUTOSAVE_MS = 120000;
 
 const SEASONS = [

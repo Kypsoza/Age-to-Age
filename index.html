@@ -2,101 +2,169 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script>
-  (function(){
-    var forceDesktop = /[?&]desktop=1/.test(window.location.search);
-    var isMobile = !forceDesktop
-      && window.matchMedia("(pointer: coarse)").matches
-      && Math.min(window.innerWidth, window.innerHeight) < 820;
-    if(isMobile) window.location.replace("mobile/index.html");
-  })();
-</script>
-<title>Age to Age — Phase 1 : Genèse</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Age to Age</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<div id="appShell">
 <div id="app">
 
-  <div id="difficultyScreen" class="overlayScreen">
+  <!-- ===================== ECRAN D'ACCUEIL ===================== -->
+  <div id="homeScreen" class="homeScreen">
+    <div class="homeTopBar"><button class="gearBtn" id="btnSettingsTop">⚙️</button></div>
+    <div class="homeContent">
+      <div class="gameTitle">AGE TO AGE<span class="gameTitleGear">⚙️</span></div>
+      <button id="btnHomeNewGame" class="primaryBtn">Nouvelle partie</button>
+      <button id="btnHomeLoad" class="secondaryBtn">Charger partie (JSON)</button>
+    </div>
+    <div class="homeBottomBar">
+      <span class="homeFooterText">Vanilla JS | GitHub Pages</span>
+      <button class="gearBtn" id="btnSettingsBottom">⚙️</button>
+    </div>
+  </div>
+
+  <!-- ===================== ECRAN DE DIFFICULTE ===================== -->
+  <div id="difficultyScreen" class="overlayScreen hidden">
+    <button class="gearBtn" id="backToHomeBtn">←</button>
     <div class="overlayCard">
-      <h2>Age to Age</h2>
+      <h2>Difficulté</h2>
       <p class="overlaySub">Choisis ta difficulté avant de commencer.</p>
       <div id="difficultyGrid"></div>
     </div>
   </div>
 
+  <!-- ===================== ECRAN DE DEFAITE ===================== -->
   <div id="defeatScreen" class="overlayScreen hidden">
     <div class="overlayCard">
       <h2>💀 Défaite</h2>
       <p class="overlaySub" id="defeatMessage">La tribu s'est éteinte.</p>
-      <button id="btnDefeatRestart" class="foundBtn" style="margin-top:16px;">Nouvelle partie</button>
+      <button id="btnDefeatRestart" class="primaryBtn">Nouvelle partie</button>
+    </div>
+  </div>
+
+  <!-- ===================== FICHE REGLAGES ===================== -->
+  <div id="settingsOverlay" class="hidden" style="position:absolute;inset:0;background:rgba(35,25,10,.45);z-index:420;"></div>
+  <div id="settingsSheet" class="hidden" style="position:absolute;left:0;right:0;bottom:0;background:var(--cream-light);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:18px 20px calc(18px + env(safe-area-inset-bottom));z-index:421;box-shadow:var(--shadow-up);">
+    <div class="sheetHandle"></div>
+    <h3 style="margin-bottom:14px;">Réglages</h3>
+    <button id="btnSave" class="slateBtn">💾 Sauvegarder</button>
+    <button id="btnExport" class="secondaryBtn">⬇️ Exporter la partie (.json)</button>
+    <button id="btnReset" class="secondaryBtn dangerOutline">🗑️ Nouvelle partie</button>
+  </div>
+  <input type="file" id="fileImport" accept="application/json" class="hidden">
+
+  <!-- ===================== TOPBAR ===================== -->
+  <div id="resourceStrip">
+    <div class="resChip" id="chipBois">
+      <span class="ic">🪵</span><span class="resValue" id="resBois">0</span>
+      <span class="delta" id="deltaBois"></span>
+      <button class="resInfoBtn" data-info="bois">i</button>
+    </div>
+    <div class="resChip" id="chipPierre">
+      <span class="ic">🪨</span><span class="resValue" id="resPierre">0</span>
+      <span class="delta" id="deltaPierre"></span>
+      <button class="resInfoBtn" data-info="pierre">i</button>
+    </div>
+    <div class="resChip" id="chipNourriture">
+      <span class="ic">🌾</span><span class="resValue" id="resNourriture">0</span>
+      <span class="delta" id="deltaNourriture"></span>
+      <button class="resInfoBtn" data-info="nourriture">i</button>
+    </div>
+    <div class="resChip" id="chipOr">
+      <span class="ic">🪙</span><span class="resValue" id="resOr">0</span>
+      <span class="delta" id="deltaOr"></span>
+      <button class="resInfoBtn" data-info="or">i</button>
     </div>
   </div>
 
   <header id="topbar">
-    <h1>Age to Age</h1>
-    <span class="era-badge">Genèse — avant l'Ère 1</span>
-    <span class="era-badge" id="difficultyBadge"></span>
-    <div class="res-pill" id="pillBois"><span class="ic">🪵</span><span id="resBois">0</span> <span class="delta" id="deltaBois"></span></div>
-    <div class="res-pill" id="pillPierre"><span class="ic">🪨</span><span id="resPierre">0</span> <span class="delta" id="deltaPierre"></span></div>
-    <div class="res-pill" id="pillNourriture"><span class="ic">🌾</span><span id="resNourriture">0</span> <span class="delta" id="deltaNourriture"></span></div>
-    <div class="res-pill" id="pillOr"><span class="ic">✨</span><span id="resOr">0</span> <span class="delta" id="deltaOr"></span></div>
-    <div class="res-pill"><span class="ic">👥</span><span id="popCount">0</span> <span class="detail" id="popDetail"></span></div>
-    <div id="clock"><span id="seasonIcon">🌱</span><span id="clockLabel">Printemps · Jour 1 · Jour</span>
-      <span id="speedControls">
-        <button data-speed="1" class="active">▶</button><button data-speed="3">▶▶</button><button data-speed="0">⏸</button>
-      </span>
-    </div>
+    <div class="popBadge"><span class="ic">👥</span><span id="popCount">0</span>/<span id="popCap">0</span></div>
+    <span id="topClock">🌱 Saison 1 · Jour 1 · Matin</span>
+    <span id="difficultyBadge"></span>
+    <span id="speedControls">
+      <button data-speed="0">⏸</button><button data-speed="1" class="active">▶</button><button data-speed="3">⏩</button>
+    </span>
   </header>
 
   <div id="defenseHud"></div>
 
+  <!-- ===================== ECRANS DE JEU ===================== -->
   <main>
-    <div id="mapWrap">
+    <div id="screenMap" class="screen active">
       <div id="mapCanvas">
         <div id="mapSvg"></div>
-        <div id="nightVeil"></div>
         <div id="markerLayer"></div>
       </div>
     </div>
 
-    <div id="infoPanel">
-      <div id="villagePanel" class="hidden"></div>
-      <div id="recruitPanel" class="hidden"></div>
-      <div id="upgradesPanel" class="hidden"></div>
-      <h2>Détails</h2>
-      <div id="infoContent">Clique sur un site de recherche ou sur l'entrepôt pour voir ses détails.</div>
+    <div id="screenBuild" class="screen">
+      <div class="panelScreen">
+        <h2>Construire</h2>
+        <div id="villagePanelMobile"></div>
+        <div id="buildGrid" class="buildGrid"></div>
+      </div>
+    </div>
+
+    <div id="screenUpgrades" class="screen">
+      <div class="panelScreen">
+        <h2>Entrepôt</h2>
+        <div id="storageCards"></div>
+        <h2 style="margin-top:20px;">Améliorations</h2>
+        <div id="upgradeCards"></div>
+      </div>
+    </div>
+
+    <div id="screenPop" class="screen">
+      <div class="panelScreen">
+        <h2>Habitants</h2>
+        <div id="popStats"></div>
+        <div id="recruitCardMobile"></div>
+      </div>
     </div>
   </main>
 
-  <div id="buildBar" class="hidden">
-    <span class="eraLabel">Bâtiments — Ère 1</span>
-    <div id="menuList"></div>
+  <nav id="tabBar">
+    <button data-tab="screenMap" class="active"><span class="tabIcon">🗺️</span>Carte</button>
+    <button data-tab="screenBuild"><span class="tabIcon">🏗️</span>Construire</button>
+    <button data-tab="screenUpgrades"><span class="tabIcon">🔧</span>Améliorations</button>
+    <button data-tab="screenPop"><span class="tabIcon">👥</span>Habitants</button>
+  </nav>
+
+  <!-- ===================== BOTTOM SHEET (site / batiment / entrepot) ===================== -->
+  <div id="sheetOverlay"></div>
+  <div id="bottomSheet">
+    <div class="sheetHandle"></div>
+    <div id="sheetContent"></div>
   </div>
 
-  <footer>
-    <button id="btnSave">💾 Sauvegarder</button>
-    <button id="btnExport">⬇️ Exporter .json</button>
-    <button id="btnImport">⬆️ Importer</button>
-    <input type="file" id="fileImport" accept="application/json">
-    <button id="btnReset">🗑️ Nouvelle partie</button>
-    <span style="margin-left:auto;color:var(--bone-dim);font-family:var(--font-mono);font-size:11px;">Phase 1 — Genèse : Recherche & Découverte</span>
-  </footer>
+  <!-- ===================== MODALE - info / confirmation d'achat ===================== -->
+  <div id="infoModalOverlay">
+    <div id="infoModal">
+      <div class="modalIcon" id="infoModalIcon"></div>
+      <h3 id="infoModalTitle"></h3>
+      <p id="infoModalBody"></p>
+      <div id="infoModalCost" class="modalCostRow"></div>
+      <div class="modalActions">
+        <button id="infoModalSecondary">Annuler</button>
+        <button id="infoModalPrimary" class="hidden">Construire</button>
+      </div>
+    </div>
+  </div>
+
+</div>
 </div>
 <div id="toast"></div>
 
 <script src="js/config.js"></script>
 <script src="js/state.js"></script>
 <script src="js/simulation.js"></script>
-<script src="js/render-map.js"></script>
-<script src="js/render-panel.js"></script>
-<script src="js/render-buildbar.js"></script>
-<script src="js/render-topbar.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/render-map.js"></script>
+<script src="js/render-screens.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

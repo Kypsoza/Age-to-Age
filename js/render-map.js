@@ -1,7 +1,6 @@
 // =====================================================================
-// RENDERING — carte procédurale (SVG de fond + marqueurs HTML par-dessus)
+// RENDERING — carte mobile (fond procédural + marqueurs + bottom sheet)
 // =====================================================================
-
 function blobPath(cx, cy, baseR, seedOffset, points, irregularity){
   points = points || 10;
   irregularity = irregularity===undefined ? 0.35 : irregularity;
@@ -30,42 +29,46 @@ function buildMapSVG(decor){
   let svg = `<svg viewBox="0 0 ${MAP_W} ${MAP_H}" xmlns="http://www.w3.org/2000/svg" width="${MAP_W}" height="${MAP_H}" style="display:block;">`;
   svg += `<defs>
     <radialGradient id="lakeGrad" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" stop-color="#4a93bf"/>
-      <stop offset="60%" stop-color="#2a5f85"/>
-      <stop offset="100%" stop-color="#1c4360"/>
+      <stop offset="0%" stop-color="#8FC0DB"/><stop offset="60%" stop-color="#5C9BBF"/><stop offset="100%" stop-color="#3E7A9E"/>
     </radialGradient>
     <linearGradient id="grassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#57783c"/>
-      <stop offset="100%" stop-color="#3f5c2b"/>
+      <stop offset="0%" stop-color="#DCE9C8"/><stop offset="55%" stop-color="#C7DAAE"/><stop offset="100%" stop-color="#AEC98F"/>
     </linearGradient>
   </defs>`;
   svg += `<rect x="0" y="0" width="${MAP_W}" height="${MAP_H}" fill="url(#grassGrad)"/>`;
-
   const lk = decor.lake;
   svg += `<path d="${blobPath(lk.cx,lk.cy,lk.r,lk.seedOffset,16,0.22)}" fill="url(#lakeGrad)"/>`;
-  svg += `<path d="${blobPath(lk.cx,lk.cy,lk.r*0.82,lk.seedOffset+1,14,0.2)}" fill="#5aa2c9" opacity="0.35"/>`;
-
+  svg += `<path d="${blobPath(lk.cx,lk.cy,lk.r*0.8,lk.seedOffset+1,14,0.2)}" fill="#A7D3E8" opacity="0.4"/>`;
   for(const rk of decor.rocks){
-    svg += `<path d="${blobPath(rk.cx,rk.cy,rk.r,rk.seedOffset,9,0.35)}" fill="#6b6a63"/>`;
-    svg += `<path d="${blobPath(rk.cx,rk.cy,rk.r*0.55,rk.seedOffset+2,7,0.4)}" fill="#8f8d84" opacity="0.7"/>`;
+    svg += `<ellipse cx="${rk.cx+rk.r*0.15}" cy="${rk.cy+rk.r*0.25}" rx="${rk.r*0.95}" ry="${rk.r*0.65}" fill="#8C8B82" opacity="0.5"/>`;
+    svg += `<path d="${blobPath(rk.cx,rk.cy,rk.r,rk.seedOffset,9,0.3)}" fill="#A8A8A0"/>`;
+    svg += `<path d="${blobPath(rk.cx-rk.r*0.15,rk.cy-rk.r*0.15,rk.r*0.5,rk.seedOffset+2,7,0.35)}" fill="#C4C4BC" opacity="0.8"/>`;
   }
-
   for(const f of decor.forests){
     const rand = mulberry32((Math.floor(f.seedOffset*1000)+7) >>> 0);
-    const nBlobs = 4 + Math.floor(rand()*3);
-    for(let i=0;i<nBlobs;i++){
-      const angle = rand()*Math.PI*2;
-      const dist = rand()*f.r*0.5;
-      const bx = f.cx + Math.cos(angle)*dist;
-      const by = f.cy + Math.sin(angle)*dist;
-      const br = f.r*0.4 + rand()*f.r*0.35;
-      svg += `<path d="${blobPath(bx,by,br,f.seedOffset+i*3.1,8,0.3)}" fill="#2f4a24" opacity="0.9"/>`;
+    const nTrees = 5 + Math.floor(rand()*4);
+    for(let i=0;i<nTrees;i++){
+      const angle = rand()*Math.PI*2, dist = rand()*f.r*0.65;
+      const tx = f.cx + Math.cos(angle)*dist, ty = f.cy + Math.sin(angle)*dist;
+      const scale = 0.55 + rand()*0.55;
+      svg += treeSVG(tx, ty, scale);
     }
-    svg += `<path d="${blobPath(f.cx,f.cy,f.r*0.5,f.seedOffset+9,8,0.3)}" fill="#436b35" opacity="0.55"/>`;
   }
-
   svg += `</svg>`;
   return svg;
+}
+
+// Petit arbre stylisé (tronc + 2 étages de feuillage) — approximation
+// vectorielle de la forêt illustrée de la maquette (pas d'assets peints
+// disponibles dans cet environnement).
+function treeSVG(cx, cy, scale){
+  const h = 46*scale, w = 30*scale;
+  return `<g>
+    <rect x="${cx-w*0.08}" y="${cy-h*0.15}" width="${w*0.16}" height="${h*0.32}" rx="${w*0.05}" fill="#6B4A32"/>
+    <path d="M ${cx} ${cy-h} L ${cx+w*0.55} ${cy-h*0.35} L ${cx-w*0.55} ${cy-h*0.35} Z" fill="#4F6B3E"/>
+    <path d="M ${cx} ${cy-h*0.75} L ${cx+w*0.42} ${cy-h*0.12} L ${cx-w*0.42} ${cy-h*0.12} Z" fill="#5B7A47"/>
+    <path d="M ${cx-w*0.12} ${cy-h*0.9} L ${cx+w*0.18} ${cy-h*0.5} L ${cx-w*0.32} ${cy-h*0.45} Z" fill="#6C8C55" opacity="0.7"/>
+  </g>`;
 }
 
 function renderMapBackground(){
@@ -101,104 +104,11 @@ function renderMarkers(){
   }
 }
 
-function createMenuBuildingMarker(key){
-  const def = MENU_BUILDINGS[key];
-  const b = state.menuBuildings[key];
-  const div = document.createElement("div");
-  div.dataset.buildingKey = key;
-
-  if(b.building){
-    div.className = "marker buildingInProgress";
-    const icon = document.createElement("div");
-    icon.className = "markerIcon";
-    icon.textContent = "🚧";
-    div.appendChild(icon);
-
-    const pct = Math.round((1 - b.buildTimeRemaining/b.buildTimeTotal) * 100);
-    const wrap = document.createElement("div");
-    wrap.className = "barWrap";
-    const fill = document.createElement("div");
-    fill.className = "barFill";
-    fill.style.width = pct + "%";
-    wrap.appendChild(fill);
-    const chrono = document.createElement("span");
-    chrono.className = "barChrono";
-    chrono.textContent = b.buildTimeRemaining + "s";
-    wrap.appendChild(chrono);
-    div.appendChild(wrap);
-
-    div.onclick = ()=>{ state.selected = {kind:'menuBuilding', key}; renderInfoPanel(); };
-    return div;
-  }
-
-  const status = getMenuBuildStatus(state, key);
-  div.className = "marker builtBuilding";
-
-  if(!status.maxed){
-    const arrow = document.createElement("button");
-    arrow.className = "upgradeArrow";
-    arrow.textContent = "▲";
-    arrow.title = "Améliorer";
-    arrow.onclick = (e)=>{ e.stopPropagation(); buildMenuBuilding(state, key); renderAll(); };
-    arrow.onmouseenter = (e)=>{ e.stopPropagation(); showUpgradeTooltip(arrow, key); };
-    arrow.onmouseleave = (e)=>{ e.stopPropagation(); hideMenuTooltip(); };
-    div.appendChild(arrow);
-  }
-
-  const icon = document.createElement("div");
-  icon.className = "markerIcon";
-  icon.textContent = def.icon;
-  div.appendChild(icon);
-
-  const badge = document.createElement("div");
-  badge.className = "levelBadge";
-  badge.textContent = "Nv." + b.level;
-  div.appendChild(badge);
-
-  if(ALT_GATHER[key]){
-    const ctrl = document.createElement("div");
-    ctrl.className = "siteControls";
-    const minus = document.createElement("button");
-    minus.className = "wcMinus";
-    minus.textContent = "−";
-    minus.onclick = (e)=>{ e.stopPropagation(); assignToAltGather(state, key, -1); renderAll(); };
-    const count = document.createElement("span");
-    count.textContent = b.assigned || 0;
-    const plus = document.createElement("button");
-    plus.className = "wcPlus";
-    plus.textContent = "+";
-    plus.onclick = (e)=>{ e.stopPropagation(); assignToAltGather(state, key, 1); renderAll(); };
-    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
-    div.appendChild(ctrl);
-  }
-
-  if(key === "barracks"){
-    const ctrl = document.createElement("div");
-    ctrl.className = "siteControls";
-    ctrl.title = "Soldats assignés";
-    const minus = document.createElement("button");
-    minus.className = "wcMinus";
-    minus.textContent = "−";
-    minus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, -1); renderAll(); };
-    const count = document.createElement("span");
-    count.textContent = "🗡️" + (b.assignedSoldiers || 0);
-    const plus = document.createElement("button");
-    plus.className = "wcPlus";
-    plus.textContent = "+";
-    plus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, 1); renderAll(); };
-    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
-    div.appendChild(ctrl);
-  }
-
-  div.onclick = ()=>{ state.selected = {kind:'menuBuilding', key}; renderInfoPanel(); };
-  return div;
-}
-
 function createStorageMarker(){
   const div = document.createElement("div");
   div.className = "marker storageMarker";
-  div.innerHTML = `<div class="markerIcon">📦</div>`;
-  div.onclick = ()=>{ state.selected = {kind:'storage'}; renderInfoPanel(); };
+  div.innerHTML = `<div class="markerIcon">📦</div><div class="storageLabel">Storage</div>`;
+  div.onclick = ()=> openStorageSheet();
   return div;
 }
 
@@ -215,7 +125,7 @@ function createSiteMarker(site){
     btn.innerHTML = `🔍 ${def.label}`;
     btn.onclick = (e)=>{ e.stopPropagation(); launchResearch(state, site); renderAll(); };
     div.appendChild(btn);
-    div.onclick = ()=>{ state.selected = {kind:'site', type:site.type}; renderInfoPanel(); };
+    div.onclick = ()=> openSiteSheet(site.type);
     return div;
   }
 
@@ -228,22 +138,18 @@ function createSiteMarker(site){
     const pct = Math.round((1 - site.effortRemaining/site.effortTotal) * 100);
     const wrap = document.createElement("div");
     wrap.className = "barWrap";
-    const fill = document.createElement("div");
-    fill.className = "barFill";
-    fill.style.width = pct + "%";
+    const fill = document.createElement("div"); fill.className = "barFill"; fill.style.width = pct + "%";
     wrap.appendChild(fill);
-    const chrono = document.createElement("span");
-    chrono.className = "barChrono";
+    const chrono = document.createElement("span"); chrono.className = "barChrono";
     chrono.textContent = site.assigned > 0 ? Math.ceil(site.effortRemaining/site.assigned)+"s" : "⏸";
     wrap.appendChild(chrono);
     div.appendChild(wrap);
-
     div.appendChild(buildAssignControls(site));
   } else if(site.type !== "hotelville"){
     div.appendChild(buildAssignControls(site));
   }
 
-  div.onclick = ()=>{ state.selected = {kind:'site', type:site.type}; renderInfoPanel(); };
+  div.onclick = ()=> openSiteSheet(site.type);
   return div;
 }
 
@@ -251,22 +157,84 @@ function buildAssignControls(site){
   const ctrl = document.createElement("div");
   ctrl.className = "siteControls";
   const minus = document.createElement("button");
-  minus.className = "wcMinus";
-  minus.textContent = "−";
+  minus.className = "wcMinus"; minus.textContent = "−";
   minus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, -1); renderAll(); };
-  const count = document.createElement("span");
-  count.textContent = site.assigned;
+  const count = document.createElement("span"); count.textContent = site.assigned;
   const plus = document.createElement("button");
-  plus.className = "wcPlus";
-  plus.textContent = "+";
+  plus.className = "wcPlus"; plus.textContent = "+";
   plus.onclick = (e)=>{ e.stopPropagation(); assignToSite(state, site, 1); renderAll(); };
   ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
   return ctrl;
 }
 
-function updateTickVisuals(){
-  document.getElementById("nightVeil").style.setProperty('--night-op', 0);
+function createMenuBuildingMarker(key){
+  const def = MENU_BUILDINGS[key];
+  const b = state.menuBuildings[key];
+  const status = getMenuBuildStatus(state, key);
 
+  const div = document.createElement("div");
+  div.className = "marker " + (b.building ? "buildingInProgress" : "builtBuilding");
+  div.dataset.buildingKey = key;
+
+  if(b.building){
+    const icon = document.createElement("div");
+    icon.className = "markerIcon"; icon.textContent = "🚧";
+    div.appendChild(icon);
+    const wrap = document.createElement("div"); wrap.className = "barWrap";
+    const fill = document.createElement("div"); fill.className = "barFill";
+    fill.style.width = Math.round((1-b.buildTimeRemaining/b.buildTimeTotal)*100)+"%";
+    wrap.appendChild(fill);
+    const chrono = document.createElement("span"); chrono.className = "barChrono"; chrono.textContent = b.buildTimeRemaining+"s";
+    wrap.appendChild(chrono);
+    div.appendChild(wrap);
+    div.onclick = ()=> openBuildingSheet(key);
+    return div;
+  }
+
+  if(!status.maxed){
+    const arrow = document.createElement("button");
+    arrow.className = "upgradeArrow"; arrow.textContent = "▲";
+    arrow.onclick = (e)=>{ e.stopPropagation(); buildMenuBuilding(state, key); renderAll(); };
+    div.appendChild(arrow);
+  }
+
+  const icon = document.createElement("div");
+  icon.className = "markerIcon"; icon.textContent = def.icon;
+  div.appendChild(icon);
+
+  const badge = document.createElement("div");
+  badge.className = "levelBadge"; badge.textContent = "Nv." + b.level;
+  div.appendChild(badge);
+
+  if(ALT_GATHER[key]){
+    const ctrl = document.createElement("div");
+    ctrl.className = "siteControls";
+    const minus = document.createElement("button"); minus.className = "wcMinus"; minus.textContent = "−";
+    minus.onclick = (e)=>{ e.stopPropagation(); assignToAltGather(state, key, -1); renderAll(); };
+    const count = document.createElement("span"); count.textContent = b.assigned || 0;
+    const plus = document.createElement("button"); plus.className = "wcPlus"; plus.textContent = "+";
+    plus.onclick = (e)=>{ e.stopPropagation(); assignToAltGather(state, key, 1); renderAll(); };
+    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
+    div.appendChild(ctrl);
+  }
+
+  if(key === "barracks"){
+    const ctrl = document.createElement("div");
+    ctrl.className = "siteControls";
+    const minus = document.createElement("button"); minus.className = "wcMinus"; minus.textContent = "−";
+    minus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, -1); renderAll(); };
+    const count = document.createElement("span"); count.textContent = "🗡️" + (b.assignedSoldiers || 0);
+    const plus = document.createElement("button"); plus.className = "wcPlus"; plus.textContent = "+";
+    plus.onclick = (e)=>{ e.stopPropagation(); assignSoldier(state, 1); renderAll(); };
+    ctrl.appendChild(minus); ctrl.appendChild(count); ctrl.appendChild(plus);
+    div.appendChild(ctrl);
+  }
+
+  div.onclick = ()=> openBuildingSheet(key);
+  return div;
+}
+
+function updateTickVisuals(){
   const discoveries = state.justDiscovered && state.justDiscovered.length > 0;
   const completions = state.justCompleted && state.justCompleted.length > 0;
   const defenseEvent = !!state.justDefenseEvent;
@@ -275,40 +243,30 @@ function updateTickVisuals(){
     state.justDiscovered = [];
     state.justCompleted = [];
     state.justDefenseEvent = false;
-    renderTopbar();
-    renderInfoPanel();
-    renderVillagePanel();
-    renderRecruitPanel();
-    renderUpgradesPanel();
-    renderBuildBar();
+    renderTopStrip();
+    renderBuildScreen();
+    renderUpgradesScreen();
+    renderPopScreen();
+    refreshOpenSheet();
     return;
   }
-
   for(const site of state.researchSites){
     const el = document.querySelector(`.marker[data-type="${site.type}"]`);
     if(!el) continue;
     if(!site.discovered){
-      const fill = el.querySelector(".barFill");
-      const chrono = el.querySelector(".barChrono");
-      if(fill){
-        const pct = Math.round((1 - site.effortRemaining/site.effortTotal) * 100);
-        fill.style.width = pct + "%";
-      }
-      if(chrono){
-        chrono.textContent = site.assigned > 0 ? Math.ceil(site.effortRemaining/site.assigned)+"s" : "⏸";
-      }
+      const fill = el.querySelector(".barFill"), chrono = el.querySelector(".barChrono");
+      if(fill){ const pct = Math.round((1 - site.effortRemaining/site.effortTotal) * 100); fill.style.width = pct + "%"; }
+      if(chrono) chrono.textContent = site.assigned > 0 ? Math.ceil(site.effortRemaining/site.assigned)+"s" : "⏸";
     }
     const count = el.querySelector(".siteControls span");
     if(count) count.textContent = site.assigned;
   }
-
   for(const key of Object.keys(MENU_BUILDINGS)){
     const b = state.menuBuildings[key];
     if(b.building){
       const el = document.querySelector(`.marker[data-building-key="${key}"]`);
       if(!el) continue;
-      const fill = el.querySelector(".barFill");
-      const chrono = el.querySelector(".barChrono");
+      const fill = el.querySelector(".barFill"), chrono = el.querySelector(".barChrono");
       if(fill) fill.style.width = Math.round((1 - b.buildTimeRemaining/b.buildTimeTotal)*100) + "%";
       if(chrono) chrono.textContent = b.buildTimeRemaining + "s";
     } else if(ALT_GATHER[key] && b.level > 0){
@@ -323,10 +281,6 @@ function updateTickVisuals(){
       if(count) count.textContent = "🗡️" + (b.assignedSoldiers || 0);
     }
   }
-
-  renderTopbar();
-  renderInfoPanel();
-  renderVillagePanel();
-  renderRecruitPanel();
-  renderUpgradesPanel();
+  renderTopStrip();
+  refreshOpenSheet();
 }
